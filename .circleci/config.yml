@@ -107,7 +107,6 @@ workflows:
                 - main
                 - /^dev.*/
                 - /^release.*/
-                - /^circle-ci-setup-.*/
       - hold:
           type: approval
           requires:
@@ -116,7 +115,6 @@ workflows:
             branches:
               only:
                 - main
-                - /^circle-ci-setup-.*/
       - build-main:
             requires:
               - hold
@@ -124,4 +122,3 @@ workflows:
               branches:
                 only:
                     - main
-                    - /^circle-ci-setup-.*/
