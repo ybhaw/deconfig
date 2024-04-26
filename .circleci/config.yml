@@ -23,6 +23,9 @@ jobs:
       - image: cimg/python:3.8.19
     steps:
       - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements-dev.txt
       - run:
           name: Change work directory
           command: |
