@@ -83,29 +83,24 @@ jobs:
       - run:
           name: Setting environment variables
           command: |
-            echo 'export DEV_VERSION_SUFFIX=$(date "+%Y%m%d%H%M%S")' >> $BASH_ENV
-            echo 'export TWINE_USERNAME="${TWINE_DEV_USERNAME}"' >> $BASH_ENV
-            echo 'export TWINE_PASSWORD="${TWINE_DEV_PASSWORD}"' >> $BASH_ENV
-            echo 'export TWINE_REPOSITORY="${TWINE_DEV_REPOSITORY}"' >> $BASH_ENV
+            echo 'export TWINE_USERNAME="${TWINE_MAIN_USERNAME}"' >> $BASH_ENV
+            echo 'export TWINE_PASSWORD="${TWINE_MAIN_PASSWORD}"' >> $BASH_ENV
+            echo 'export TWINE_REPOSITORY="${TWINE_MAIN_REPOSITORY}"' >> $BASH_ENV
       - run:
           name: Publish package
           command: python3 -m twine upload dist/* || echo 'Skipping Build'
-      - run:
-          name: Add release tag
-          command: |
-            git config user.name "CircleCIBuilder"
-            git config user.email "builder@circleci.com"
-            python3 -c "import deconfig; print(deconfig.__version__)" > version.txt
-            git tag -a "$(cat version.txt)" -m "Release $(cat version.txt)"
-            git push origin "release-${CIRCLE_SHA1:0:7}"
 
 workflows:
   run-tests:
     jobs:
       - build-and-test
-      - build-dev:
+      - hold-dev:
+          type: approval
           requires:
             - build-and-test
+      - build-dev:
+          requires:
+            - hold-dev
           filters:
             branches:
               only:
