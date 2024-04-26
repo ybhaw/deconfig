@@ -4,7 +4,7 @@ orbs:
   python: circleci/python@2.1.1
 
 jobs:
-  build-and-test:
+  run-test:
     docker:
       - image: cimg/python:3.8.19
     steps:
@@ -18,6 +18,30 @@ jobs:
       - run:
           name: Run tests
           command: pytest
+  build-dev:
+    docker:
+      - image: cimg/python:3.8.19
+    steps:
+      - checkout
+      - run:
+          name: Change work directory
+          command: |
+            cd src
+            rm -rf dist/
+            rm -rf deconfig.egg-info/
+      - run:
+          name: Setting environment variables
+          command: |
+            echo 'export TWINE_USERNAME="${TWINE_DEV_USERNAME}"' >> $BASH_ENV
+            echo 'export TWINE_PASSWORD="${TWINE_DEV_PASSWORD}"' >> $BASH_ENV
+            echo 'export TWINE_REPOSITORY="${TWINE_DEV_REPOSITORY}"' >> $BASH_ENV
+      - run:
+          name:
+          command: |
+            echo 'export DEV_VERSION="$(python3 -c "import deconfig; print(deconfig.__version__)").$BUILD_TIME"'
+            python3 -m build
+            python3 -m twine upload --repository testpypi dist/*
+
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
@@ -25,4 +49,13 @@ workflows:
   run-tests: # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
     jobs:
-      - build-and-test
+      - run-test
+      - build-dev:
+          requires:
+            - run-test
+          filters:
+            branches:
+              only:
+                - main
+                - /^release.*/
+                - /^circle-ci-setup-.*/
