@@ -64,7 +64,7 @@ jobs:
 workflows:
   run-tests:
     jobs:
-      - run-test
+      - build-and-test
       - build-dev:
           requires:
             - run-test
