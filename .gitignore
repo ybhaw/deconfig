@@ -176,6 +176,3 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
-
-src/*/dist/
-ssrc/*/deconfig.egg-ingo/

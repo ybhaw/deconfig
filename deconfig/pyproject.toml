@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools", "setuptools_scm", "wheel"]
+build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name = "deconfig"
-version = "0.1.0"
+dynamic=["version"]
 description = "A simple configuration library for Python"
 authors = [
     {name="ybhaw"}
