@@ -98,6 +98,12 @@ workflows:
           type: approval
           requires:
             - build-and-test
+          filters:
+            branches:
+              only:
+                - main
+                - /^dev.*/
+                - /^release.*/
       - build-dev:
           requires:
             - hold-dev
