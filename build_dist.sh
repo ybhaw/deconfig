@@ -11,9 +11,9 @@ python3 -m pip install --upgrade build
 python3 -m pip install --upgrade twine
 
 # Building deconfig
-cd deconfig
-rm -rf dist
-rm -rf deconfig.egg-info
+cd src
+rm -rf dist/
+rm -rf deconfig.egg-info/
 PYTHONPATH="$BASE_PYTHONPATH:$(pwd)"
 DEV_VERSION="$(python3 -c "import deconfig; print(deconfig.__version__)").$BUILD_TIME"
 python3 -m build
