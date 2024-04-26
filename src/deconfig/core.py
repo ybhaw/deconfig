@@ -1,8 +1,40 @@
-from typing import Callable, Dict, Type, Any, TypeVar, List, Optional
+import configparser
+import os
+from abc import ABC, abstractmethod
+from typing import Any, List, Optional
+from typing import Callable, TypeVar
+from typing import Dict, Type
 
-from deconfig.core.adapter.adapter_base import AdapterBase
 
 T = TypeVar("T")
+
+
+class AdapterError(Exception):
+    """
+    Raised when adapter fails to get field value.
+    """
+    pass
+
+
+class AdapterBase(ABC):
+    """
+    Base class for all adapters.
+    """
+
+    @abstractmethod
+    def get_field(self, field_name: str, method: Callable[..., T], *method_args, **method_kwargs) -> Any:
+        """
+        Use this method to initialize the field in configuration.
+        If field is not present in config, AdapterError should be raised to indicate to library to try next adapter.
+
+        :param field_name: Field name as passed in @field
+        :param method: getter method - Use with FieldUtil to get additional properties from the field
+        :param method_args: In case the response of getter is a method, arguments passed will be passed to the method
+        :param method_kwargs: Same as method_args
+        :return: Value if field is present, otherwise raise AdapterError
+        :raises AdapterError: If field is not present, this indicates to library to try next adapter
+        """
+        pass
 
 
 class FieldUtil:
@@ -173,3 +205,115 @@ class FieldUtil:
         Check if function has original function.
         """
         return hasattr(wrapper_function, "original_function")
+
+
+class _EnvAdapterConfig:
+    def __init__(self):
+        self.name: Optional[str] = None
+        self.override_prefix: bool = False
+
+
+class EnvAdapter(AdapterBase):
+    """
+    Adapter for getting field value from environment variables.
+    You can specify environment variable name with @EnvAdapter.name decorator,
+    or use field name in uppercase as environment variable name.
+
+    :param env_prefix: Prefix for environment variable names.
+    """
+
+    @staticmethod
+    def name(name: str, override_prefix: bool = False):
+        """
+        Decorator for setting environment variable name.
+
+        :param name: Environment variable name.
+        :param override_prefix: Override prefix for environment variable name.
+        """
+
+        def wrapper(func):
+            env_config = FieldUtil.get_adapter_configs(func).get(EnvAdapter, _EnvAdapterConfig())
+            env_config.name = name
+            env_config.override_prefix = override_prefix
+            FieldUtil.upsert_adapter_config(func, EnvAdapter, env_config)
+            return func
+
+        return wrapper
+
+    def __init__(self, env_prefix: str = ""):
+        self._env_prefix = env_prefix
+
+    def get_field(self, field_name: str, method: Callable[..., T], *args, **kwargs) -> str:
+        env_config: Optional[_EnvAdapterConfig] = FieldUtil.get_adapter_configs(method).get(EnvAdapter)
+
+        env_name = field_name.upper()
+        if env_config and env_config.name is not None:
+            env_name = env_config.name
+
+        prefix = self._env_prefix
+        if env_config and env_config.override_prefix:
+            prefix = ""
+
+        env_name = prefix + env_name
+        if env_name not in os.environ:
+            raise AdapterError(f"Environment variable {env_name} not found.")
+        return os.environ[env_name]
+
+
+class _IniAdapterConfig:
+    def __init__(self):
+        self.name: Optional[str] = None
+        self.section_name: Optional[str] = None
+        self.file_paths: List[str] = []
+
+
+class IniAdapter(AdapterBase):
+    _ini_adapter_default_paths: Optional[List[str]] = None
+
+    @staticmethod
+    def name(
+        name: str,
+        section_name: Optional[str] = None,
+        file_paths: Optional[str] = None,
+    ):
+        def decorator(func: Callable[..., T]):
+            adapters = FieldUtil.get_adapter_configs(func)
+            config = adapters.get(IniAdapter, _IniAdapterConfig())
+            config.name = name
+            config.section_name = section_name
+            config.file_paths = file_paths
+            FieldUtil.upsert_adapter_config(func, IniAdapter, config)
+            return func
+
+        return decorator
+
+    @classmethod
+    def with_default_paths(cls, file_paths: List[str]):
+        cls._ini_adapter_default_paths = file_paths
+
+    def __init__(self, section_name: str, file_names: Optional[List[str]] = None):
+        if file_names is None and self._ini_adapter_default_paths is None:
+            raise ValueError("No file paths provided. Either pass file_names or set default using with_default_paths.")
+        self.file_names = file_names or self._ini_adapter_default_paths
+        self.section_name = section_name
+        self.configparser = configparser.ConfigParser()
+        self.configparser.read(self.file_names)
+
+    def get_field(self, field_name: str, method: Callable[..., T], *method_args, **method_kwargs) -> Any:
+        section_name = self.section_name
+        file_paths = self.file_names
+        name = field_name
+        configparser_ = self.configparser
+
+        ini_config: _IniAdapterConfig = FieldUtil.get_adapter_configs(method).get(IniAdapter)
+        if ini_config is not None:
+            section_name = ini_config.section_name or section_name
+            name = ini_config.name or name
+            if ini_config.file_paths is not None:
+                configparser_ = configparser.ConfigParser()
+                configparser_.read(ini_config.file_paths)
+
+        try:
+            return configparser_.get(section_name, name)
+        except configparser.NoOptionError:
+            raise AdapterError(f"Field {name} not found in {section_name} section of {file_paths}")

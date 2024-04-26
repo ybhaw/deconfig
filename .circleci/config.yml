@@ -1,0 +1,130 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@2.1.1
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/python:3.8.19
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements-dev.txt
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements-build.txt
+      - run:
+          name: Remove existing build files
+          command: |
+              rm -rf dist/
+              rm -rf src/deconfig.egg-info/
+      - run:
+          name: Run build
+          command: python3 -m build
+      - run:
+          name: Install package
+          command: pip install dist/*.whl
+      - run:
+          name: Reset PYTHONPATH
+          command: echo 'export PYTHONPATH=' >> $BASH_ENV
+      - run:
+          name: Run tests
+          command: pytest
+  build-dev:
+    docker:
+      - image: cimg/python:3.8.19
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements-build.txt
+      - run:
+          name: Change work directory
+          command: |
+            cd src
+            rm -rf dist/
+            rm -rf deconfig.egg-info/
+      - run:
+          name:
+          command: |
+            export DEV_VERSION_SUFFIX=$(date '+%Y%m%d%H%M%S')
+            python3 -m build
+      - run:
+          name: Setting environment variables
+          command: |
+            echo 'export TWINE_USERNAME="${TWINE_DEV_USERNAME}"' >> $BASH_ENV
+            echo 'export TWINE_PASSWORD="${TWINE_DEV_PASSWORD}"' >> $BASH_ENV
+            echo 'export TWINE_REPOSITORY="${TWINE_DEV_REPOSITORY}"' >> $BASH_ENV
+      - run:
+          name: Publish package
+          command: python3 -m twine upload dist/*
+  build-main:
+    docker:
+      - image: cimg/python:3.8.19
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements-build.txt
+      - run:
+          name: Change work directory
+          command: |
+            cd src
+            rm -rf dist/
+            rm -rf deconfig.egg-info/
+      - run:
+          name:
+          command: python3 -m build
+      - run:
+          name: Install package
+          command: pip install dist/*.whl
+      - run:
+          name: Setting environment variables
+          command: |
+            echo 'export TWINE_USERNAME="${TWINE_MAIN_USERNAME}"' >> $BASH_ENV
+            echo 'export TWINE_PASSWORD="${TWINE_MAIN_PASSWORD}"' >> $BASH_ENV
+            echo 'export TWINE_REPOSITORY="${TWINE_MAIN_REPOSITORY}"' >> $BASH_ENV
+      - run:
+          name: Publish package
+          command: python3 -m twine upload dist/*
+
+workflows:
+  run-tests:
+    jobs:
+      - build-and-test
+      - hold-dev:
+          type: approval
+          requires:
+            - build-and-test
+          filters:
+            branches:
+              only:
+                - main
+                - /^dev.*/
+                - /^release.*/
+      - build-dev:
+          requires:
+            - hold-dev
+          filters:
+            branches:
+              only:
+                - main
+                - /^dev.*/
+                - /^release.*/
+      - hold:
+          type: approval
+          requires:
+            - build-dev
+          filters:
+            branches:
+              only:
+                - main
+      - build-main:
+            requires:
+              - hold
+            filters:
+              branches:
+                only:
+                    - main
