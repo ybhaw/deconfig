@@ -41,7 +41,7 @@ jobs:
       - run:
           name:
           command: |
-            echo 'export DEV_VERSION_SUFFIX=$(date '+%Y%m%d%H%M%S')
+            echo 'export DEV_VERSION_SUFFIX=$(date '+%Y%m%d%H%M%S')' >> $BASH_ENV
             python3 -m build
             python3 -m twine upload dist/*
 
