@@ -58,8 +58,8 @@ class FieldUtil:
         Add adapter to the function.
         """
         adapters = cls.get_adapters(function) or []
-        adapters.append(adapter_)
-        setattr(function, "adapters", adapters)
+        adapters.insert(0, adapter_)
+        cls.set_adapters(function, adapters)
 
     @classmethod
     def set_name(cls, function: Callable[..., T], name: str) -> None:
@@ -152,3 +152,24 @@ class FieldUtil:
         """
         if cls.has_cache_response(function):
             delattr(function, "cached_response")
+
+    @classmethod
+    def set_original_function(cls, wrapper_function: Callable[..., T], original_function: Callable[..., T]) -> None:
+        """
+        Set original function to the wrapper function.
+        """
+        setattr(wrapper_function, "original_function", original_function)
+
+    @classmethod
+    def get_original_function(cls, wrapper_function: Callable[..., T]) -> Callable[..., T]:
+        """
+        Get original function from the wrapper function.
+        """
+        return getattr(wrapper_function, "original_function")
+
+    @classmethod
+    def has_original_function(cls, wrapper_function: Callable[..., T]) -> bool:
+        """
+        Check if function has original function.
+        """
+        return hasattr(wrapper_function, "original_function")
