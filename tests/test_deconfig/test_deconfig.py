@@ -2,6 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from deconfig.core import AdapterBase, EnvAdapter, AdapterError
+
 
 @pytest.mark.parametrize(
     "import_name",
@@ -147,7 +149,6 @@ class TestValidationCallback:
 class TestAddAdapter:
     def test_Should_set_attribute_adapters_When_add_adapter_is_called(self):
         from deconfig import add_adapter
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         mock_adapter = MagicMock(AdapterBase)
 
@@ -160,7 +161,6 @@ class TestAddAdapter:
 
     def test_Should_return_same_function_When_add_adapter_is_called(self):
         from deconfig import add_adapter
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         mock = MagicMock(AdapterBase)
         response_callback = add_adapter(mock)(mock)
@@ -168,7 +168,6 @@ class TestAddAdapter:
 
     def test_Should_add_adapter_to_existing_adapters_When_add_adapter_is_called(self):
         from deconfig import add_adapter
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         adapter_1 = MagicMock(AdapterBase)
         field_mock = MagicMock()
@@ -187,7 +186,6 @@ class TestAddAdapter:
 
     def test_Should_add_adapter_as_new_list_When_add_adapter_is_called(self):
         from deconfig import add_adapter
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         mock_adapter = MagicMock(AdapterBase)
 
@@ -219,8 +217,6 @@ class TestSetDefaultAdapters:
     def test_Should_set_default_adapters_to_EnvAdapter_When_set_default_adapters_is_not_called(self):
         # noinspection PyProtectedMember
         from deconfig import _adapters, config, field
-        from deconfig.core.adapter.env_adapter import EnvAdapter
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         assert len(_adapters) == 1
         assert isinstance(_adapters[0], EnvAdapter)
@@ -252,7 +248,6 @@ class TestSetDefaultAdapters:
 
     def test_Should_set_default_adapters_to_given_adapters_When_set_default_adapters_is_called_with_adapters(self):
         from deconfig import config, field, set_default_adapters
-        from deconfig.core.adapter.adapter_base import AdapterBase
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -271,7 +266,6 @@ class TestSetDefaultAdapters:
 
 class TestConfig:
     def test_Should_use_env_adapter_When_no_adapters_are_set(self):
-        from deconfig.core.adapter.adapter_base import AdapterBase
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -291,7 +285,6 @@ class TestConfig:
 
     def test_Should_update_and_use_class_adapters_When_adapters_set_using_decorator_args(self):
         from deconfig import config, field
-        from deconfig.core.adapter.adapter_base import AdapterBase
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -307,7 +300,6 @@ class TestConfig:
 
     def test_Should_update_and_use_class_adapters_When_adapters_set_using_set_default_adapters(self):
         from deconfig import config, field, set_default_adapters
-        from deconfig.core.adapter.adapter_base import AdapterBase
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -325,7 +317,6 @@ class TestConfig:
 
     def test_Should_prioritize_config_args_When_config_has_adapters_and_default_is_also_set(self):
         from deconfig import config, field, set_default_adapters
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         default_adapter = MagicMock(AdapterBase)
 
@@ -346,7 +337,6 @@ class TestConfig:
 
     def test_Should_only_configure_methods_with_field_decorator_When_config_is_called(self):
         from deconfig import config, field
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
@@ -368,7 +358,6 @@ class TestConfig:
 
     def test_Should_prioritize_methods_adapters_When_method_has_adapters(self):
         from deconfig import config, field, add_adapter
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         method_adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
@@ -397,8 +386,6 @@ class TestConfig:
 
     def test_Should_use_class_adapters_When_field_missing_in_field_adapters(self):
         from deconfig import config, field, add_adapter
-        from deconfig.core.adapter.adapter_base import AdapterBase
-        from deconfig.core.adapter.adapter_error import AdapterError
 
         method_adapter = MagicMock(AdapterBase)
         method_adapter.get_field.side_effect = AdapterError("Intentional error")
@@ -425,7 +412,6 @@ class TestConfig:
 
     def test_Should_update_field_methods_with_decorated_config_decorator_When_class_is_decorated_with_config(self):
         from deconfig import config, field
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
@@ -443,7 +429,6 @@ class TestConfig:
 
     def test_Should_add_reset_deconfig_cache_method_When_class_is_decorated_with_config(self):
         from deconfig import config, field
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
@@ -463,7 +448,6 @@ class TestConfig:
 
     def test_Should_not_create_reset_deconfig_cache_When_class_already_has_reset_deconfig_cache_method(self):
         from deconfig import config, field
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
@@ -507,7 +491,6 @@ class TestDecoratedConfigDecorator:
 
     def test_Should_mandate_field_be_present_in_config_False_When_optional_is_not_set_or_is_False(self):
         from deconfig import decorated_config_decorator
-        from deconfig.core.adapter.adapter_error import AdapterError
 
         adapter = MagicMock()
         adapter.get_field.side_effect = AdapterError("Value not found")
@@ -531,7 +514,6 @@ class TestDecoratedConfigDecorator:
 
     def test_Should_set_optional_to_True_When_optional_is_set_to_true(self):
         from deconfig import decorated_config_decorator
-        from deconfig.core.adapter.adapter_error import AdapterError
 
         adapter = MagicMock()
         adapter.get_field.side_effect = AdapterError("Value not found")
@@ -618,7 +600,6 @@ class TestDecoratedConfigDecorator:
 
     def test_Should_rebuild_value_When_cache_reset_using_reset_deconfig_cache(self):
         from deconfig import config, field
-        from deconfig.core.adapter.adapter_base import AdapterBase
 
         adapter = MagicMock(AdapterBase)
         adapter.get_field.side_effect = [1, 2]
@@ -640,8 +621,6 @@ class TestDecoratedConfigDecorator:
 
     def test_Should_call_adapters_in_sequence_When_invoked(self):
         from deconfig import decorated_config_decorator
-        from deconfig.core.adapter.adapter_base import AdapterBase
-        from deconfig.core.adapter.adapter_error import AdapterError
 
         adapter_1 = MagicMock(AdapterBase)
         adapter_2 = MagicMock(AdapterBase)

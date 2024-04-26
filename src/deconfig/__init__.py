@@ -1,13 +1,9 @@
 from typing import Optional, TypeVar, Callable, List, Type
 
-from deconfig.core.adapter.adapter_base import AdapterBase
-from deconfig.core.adapter.adapter_error import AdapterError
-from deconfig.core.adapter.env_adapter import EnvAdapter
-from deconfig.core.adapter.ini_adapter import IniAdapter
-from deconfig.core.field_util import FieldUtil
+from deconfig.core import FieldUtil, AdapterError, AdapterBase, EnvAdapter, IniAdapter
 from deconfig.transformer import transform
+from deconfig.__version__ import __version__
 
-__version__ = "0.1.0"
 __author__ = "ybhaw"
 __license__ = "MIT"
 

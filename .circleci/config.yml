@@ -25,7 +25,7 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
-          pip-dependency-file: requirements-dev.txt
+          pip-dependency-file: requirements-build.txt
       - run:
           name: Change work directory
           command: |
@@ -41,16 +41,13 @@ jobs:
       - run:
           name:
           command: |
+            cd src
             echo 'export DEV_VERSION="$(python3 -c "import deconfig; print(deconfig.__version__)").$BUILD_TIME"'
             python3 -m build
-            python3 -m twine upload --repository testpypi dist/*
+            python3 -m twine upload dist/*
 
-
-# Orchestrate jobs using workflows
-# See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
 workflows:
-  run-tests: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  run-tests:
     jobs:
       - run-test
       - build-dev:
