@@ -67,7 +67,7 @@ workflows:
       - build-and-test
       - build-dev:
           requires:
-            - run-test
+            - build-and-test
           filters:
             branches:
               only:
