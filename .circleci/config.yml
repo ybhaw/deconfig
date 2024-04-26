@@ -41,8 +41,7 @@ jobs:
       - run:
           name:
           command: |
-            cd src
-            echo 'export DEV_VERSION="$(python3 -c "import deconfig; print(deconfig.__version__)").$BUILD_TIME"'
+            echo 'export DEV_VERSION_SUFFIX=$(date '+%Y%m%d%H%M%S')
             python3 -m build
             python3 -m twine upload dist/*
 
