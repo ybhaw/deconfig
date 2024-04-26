@@ -1,0 +1,181 @@
+from typing import Optional, TypeVar, Callable, List, Type
+
+from deconfig.core.adapter.adapter_base import AdapterBase
+from deconfig.core.adapter.adapter_error import AdapterError
+from deconfig.core.adapter.env_adapter import EnvAdapter
+from deconfig.core.adapter.ini_adapter import IniAdapter
+from deconfig.core.field_util import FieldUtil
+from deconfig.transformer import transform
+
+__version__ = "0.1.0"
+__author__ = "ybhaw"
+__license__ = "MIT"
+
+
+T = TypeVar("T")
+U = TypeVar("U")
+
+
+def _yield(getter_function: Callable[..., T]) -> Callable[..., T]:
+    """
+    Decorator that will handle all logic for getting field value.
+    """
+
+    # Get decorator values from getter function
+    if not FieldUtil.has_name(getter_function):
+        raise ValueError("Have you forgotten to decorate field with @field(name='name')?")
+    name = FieldUtil.get_name(getter_function)
+
+    if not FieldUtil.has_adapters(getter_function):
+        raise ValueError("Class not decorated with @config")
+    adapters = FieldUtil.get_adapters(getter_function)
+
+    optional_ = FieldUtil.is_optional(getter_function)
+    validation_callback_ = FieldUtil.get_validation_callback(getter_function)
+    transform_callback_ = FieldUtil.get_transform_callback(getter_function)
+
+    def build_response(*args, **kwargs) -> T:
+        """
+        Get field value from adapters or getter function.
+        """
+        for adapter_ in adapters:
+            try:
+                return adapter_.get_field(name, getter_function, *args, **kwargs)
+            except AdapterError:
+                continue
+        return getter_function(*args, **kwargs)
+
+    def wrapper(*args, **kwargs) -> T:
+        if FieldUtil.has_cache_response(getter_function):
+            return FieldUtil.get_cache_response(getter_function)
+
+        response = build_response(*args, **kwargs)
+        if transform_callback_ is not None:
+            response = transform_callback_(response)
+        if optional_ is False and response is None:
+            raise ValueError(f"Field {name} is required, but got None.")
+        if validation_callback_ is not None:
+            validation_callback_(response)
+        FieldUtil.set_cache_response(getter_function, response)
+        return response
+
+    return wrapper
+
+
+def _reset_cache(obj: T) -> T:
+    """
+    Decorator values are cached. This method will reset cache for all fields.
+    """
+    for name, getter_function in obj.__dict__.items():
+        if not callable(getter_function) or not FieldUtil.has_name(getter_function):
+            continue
+        if FieldUtil.has_cache_response(getter_function):
+            FieldUtil.delete_cache_response(getter_function)
+    return obj
+
+
+def field(name: str) -> Callable[..., T]:
+    """
+    Decorator for methods that will get field value.
+    Example:
+        @field(name="foo")
+        def get_foo(self) -> Optional[str]:
+            return None
+    ```
+    """
+    def wrapper(func: Callable[..., T]) -> Callable[..., T]:
+        FieldUtil.set_name(func, name)
+        FieldUtil.initialize_adapter_configs(func)
+        return func
+    return wrapper
+
+
+def optional(is_optional: bool = True) -> Callable[..., T]:
+    """
+    Decorator for optional fields. If field is required, but got None, ValueError will be raised.
+    """
+
+    def wrapper(func: Callable[..., T]) -> Callable[..., T]:
+        FieldUtil.set_optional(func, is_optional)
+        return func
+    return wrapper
+
+
+def validate(callback: Callable[..., None]) -> Callable[..., T]:
+    """
+    Decorator for adding a validation callback.
+    Validation callback will be called after field value is retrieved.
+    """
+    def wrapper(func: Callable[..., T]) -> Callable[..., T]:
+        FieldUtil.add_validation_callback(func, callback)
+        return func
+    return wrapper
+
+
+def add_adapter(adapter_: AdapterBase) -> Callable[..., T]:
+    """
+    Decorator for adding an adapter to the field.
+    """
+    def wrapper(func: Callable[..., T]) -> Callable[..., T]:
+        FieldUtil.add_adapter(func, adapter_)
+        return func
+    return wrapper
+
+
+_adapters: List[AdapterBase] = [EnvAdapter()]
+
+
+def set_default_adapters(*adapters: AdapterBase) -> None:
+    """Setting default adapters"""
+    global _adapters
+    _adapters = adapters
+
+
+def config(adapters: Optional[List[AdapterBase]] = None):
+    """
+    Decorator for the config class.
+    """
+    global _adapters
+    if adapters is None:
+        adapters = _adapters
+
+    def wrapper(class_: Type[AdapterBase]):
+        for name, getter_function in class_.__dict__.items():
+            # Skip non-field methods
+            if not callable(getter_function) or not FieldUtil.has_name(getter_function):
+                continue
+
+            if not FieldUtil.has_adapter_configs(getter_function):
+                FieldUtil.initialize_adapter_configs(getter_function)
+
+            # Field adapters get priority
+            field_adapters = adapters
+            if FieldUtil.get_adapters(getter_function) is not None:
+                field_adapters = [*FieldUtil.get_adapters(getter_function), *adapters]
+            FieldUtil.set_adapters(getter_function, field_adapters)
+
+            # Decorate with yield, that will handle all logic
+            setattr(class_, name, _yield(getter_function))
+
+        # Add method to reset cache for all fields
+        if not hasattr(class_, "reset_deconfig_cache"):
+            setattr(class_, "reset_deconfig_cache", _reset_cache)
+        return class_
+    return wrapper
+
+
+__all__ = [
+    "field",
+    "optional",
+    "validate",
+    "add_adapter",
+    "set_default_adapters",
+    "config",
+
+    # Transformers
+    "transform",
+
+    # Adapters
+    "EnvAdapter",
+    "IniAdapter",
+]

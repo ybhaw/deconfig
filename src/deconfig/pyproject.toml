@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deconfig"
+version = "0.1.0"
+description = "A simple configuration library for Python"
+authors = [
+    {name="ybhaw"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
