@@ -1,5 +1,7 @@
 # <span style="color:#cb09d7">De</span><span style="color: #635ec4">co</span><span style="color:#c7fe59">nfig</span>
 
+[![codecov](https://codecov.io/gh/ybhaw/deconfig/graph/badge.svg?token=8TJ1QVCF2E)](https://codecov.io/gh/ybhaw/deconfig)
+
 <b><span style="color:#cb09d7">Decorator </span>
 <span style="color:#635ec4">+</span>
 <span style="color:#c7fe59">Config</span></b>
