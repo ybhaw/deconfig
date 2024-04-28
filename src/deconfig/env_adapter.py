@@ -18,7 +18,6 @@ class ExampleConfig:
 ```
 """
 
-
 import os
 from dataclasses import dataclass
 from typing import Callable, Optional, TypeVar
@@ -68,10 +67,12 @@ class EnvAdapter(AdapterBase):
         self._env_prefix = env_prefix
 
     # pylint: disable=unused-argument
-    def get_field(self, field_name: str, method: Callable[..., T], *args, **kwargs) -> str:
-        env_config: Optional[_EnvAdapterConfig] = (
-            FieldUtil.get_adapter_configs(method).get(EnvAdapter)
-        )
+    def get_field(
+        self, field_name: str, method: Callable[..., T], *args, **kwargs
+    ) -> str:
+        adapter_configs = FieldUtil.get_adapter_configs(method)
+
+        env_config: Optional[_EnvAdapterConfig] = adapter_configs.get(EnvAdapter)
 
         env_name = field_name.upper()
         if env_config and env_config.override_name is not None:

@@ -16,6 +16,7 @@ class ExampleConfig:
         return "hello" # Returns "HELLO"
 ```
 """
+
 from typing import Callable, TypeVar, List
 
 T = TypeVar("T")
@@ -26,14 +27,16 @@ def transform(callback: Callable[[T], U]) -> Callable[..., T]:
     """
     Adds a transform callback to be used when deriving configuration value.
     """
+
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
         func.transform_callback = callback
         return func
+
     return wrapper
 
 
 def cast_custom(
-        callback: Callable[[T], T], cast_null: bool = False
+    callback: Callable[[T], T], cast_null: bool = False
 ) -> Callable[[U], Callable[..., U]]:
     """
     Casts response using custom callback.
@@ -51,6 +54,7 @@ def cast_custom(
         # Returns True if response is "true", False otherwise.
         ```
     """
+
     def callback_wrapper(response: U) -> T:
         if response is None and cast_null is False:
             return None
@@ -169,7 +173,7 @@ def boolean(cast_null: bool = False) -> Callable[..., Callable[..., bool]]:
 
 
 def comma_separated_array_string(
-        element_cast: Callable[[T], T], cast_null: bool = False
+    element_cast: Callable[[T], T], cast_null: bool = False
 ) -> Callable[[U], Callable[..., List[T]]]:
     """
     Creates a comma separated list out of the configuration value.
@@ -187,6 +191,7 @@ def comma_separated_array_string(
 
         If the configuration value is "1,2,3", the getter will return [1, 2, 3].
     """
+
     def callback(response: U) -> List[T]:
         if response is None and cast_null is False:
             return []
@@ -199,4 +204,11 @@ def comma_separated_array_string(
     return transform(callback)
 
 
-__all__ = ["transform", "string", "integer", "floating", "boolean", "comma_separated_array_string"]
+__all__ = [
+    "transform",
+    "string",
+    "integer",
+    "floating",
+    "boolean",
+    "comma_separated_array_string",
+]

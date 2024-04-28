@@ -7,12 +7,17 @@ from unittest.mock import MagicMock
 import pytest
 
 from deconfig.core import AdapterBase, AdapterError
+
 # noinspection PyProtectedMember
 from deconfig import (
     decorated_config_decorator,
-    config, field, optional,
-    validate, add_adapter, set_default_adapters,
-    EnvAdapter
+    config,
+    field,
+    optional,
+    validate,
+    add_adapter,
+    set_default_adapters,
+    EnvAdapter,
 )
 import deconfig
 
@@ -20,15 +25,27 @@ import deconfig
 @pytest.mark.parametrize(
     "import_name",
     [
-        "field", "optional", "validate", "add_adapter",
-        "set_default_adapters", "config", "transform",
-        "EnvAdapter", "IniAdapter"
+        "field",
+        "optional",
+        "validate",
+        "add_adapter",
+        "set_default_adapters",
+        "config",
+        "transform",
+        "EnvAdapter",
+        "IniAdapter",
     ],
     ids=[
-        "field", "optional", "validate", "add_adapter",
-        "set_default_adapters", "config", "transform",
-        "EnvAdapter", "IniAdapter"
-    ]
+        "field",
+        "optional",
+        "validate",
+        "add_adapter",
+        "set_default_adapters",
+        "config",
+        "transform",
+        "EnvAdapter",
+        "IniAdapter",
+    ],
 )
 def test_Should_have_expected_field_When_deconfig_is_imported(import_name):
     assert hasattr(deconfig, import_name)
@@ -86,12 +103,16 @@ class TestOptional:
         response_callback = optional()(mock)
         assert response_callback == mock
 
-    def test_Should_set_attribute_optional_to_true_When_optional_is_called_with_true(self):
+    def test_Should_set_attribute_optional_to_true_When_optional_is_called_with_true(
+        self,
+    ):
         test_optional = optional(True)(lambda: None)
         assert hasattr(test_optional, "optional")
         assert test_optional.optional is True
 
-    def test_Should_set_attribute_optional_to_false_When_optional_is_called_with_false(self):
+    def test_Should_set_attribute_optional_to_false_When_optional_is_called_with_false(
+        self,
+    ):
         test_optional = optional(False)(lambda: None)
         assert hasattr(test_optional, "optional")
         assert test_optional.optional is False
@@ -107,7 +128,9 @@ class TestOptional:
 
 class TestValidationCallback:
 
-    def test_Should_set_attribute_validation_callback_When_validate_is_called(self, stub_callable):
+    def test_Should_set_attribute_validation_callback_When_validate_is_called(
+        self, stub_callable
+    ):
         test_validation = validate(stub_callable)(lambda: None)
         assert hasattr(test_validation, "validation_callback")
         assert test_validation.validation_callback == stub_callable
@@ -147,7 +170,8 @@ class TestAddAdapter:
         field_mock_with_decorator = add_adapter(adapter_2())(field_mock)
         assert hasattr(field_mock_with_decorator, "adapters")
         assert field_mock_with_decorator.adapters == [
-            adapter_2.return_value, adapter_1.return_value
+            adapter_2.return_value,
+            adapter_1.return_value,
         ]
 
         adapter_3 = MagicMock(AdapterBase)
@@ -158,11 +182,11 @@ class TestAddAdapter:
         assert field_mock_with_third_adapter.adapters == [
             adapter_3.return_value,
             adapter_2.return_value,
-            adapter_1.return_value
+            adapter_1.return_value,
         ]
 
     def test_Should_add_adapter_as_new_list_When_add_adapter_is_called(
-            self, stub_callable
+        self, stub_callable
     ):
         mock_adapter = MagicMock(AdapterBase)
         assert not hasattr(stub_callable, "adapters")
@@ -180,7 +204,9 @@ class TestAddAdapter:
 
 
 class TestSetDefaultAdapters:
-    def test_Should_set_default_adapters_to_env_adapter_When_set_default_adapters_is_not_called(self):
+    def test_Should_set_default_adapters_to_env_adapter_When_set_default_adapters_is_not_called(
+        self,
+    ):
         _adapters = deconfig._adapters  # pylint: disable=protected-access
         assert len(_adapters) == 1
         assert isinstance(_adapters[0], EnvAdapter)
@@ -198,17 +224,23 @@ class TestSetDefaultAdapters:
         test_config = StubConfig()
         assert test_config.stub_field() == config_response
 
-    def test_Should_raise_type_error_When_set_default_adapters_is_called_with_no_adapters(self):
+    def test_Should_raise_type_error_When_set_default_adapters_is_called_with_no_adapters(
+        self,
+    ):
         with pytest.raises(TypeError):
             set_default_adapters()
 
-    def test_Should_raise_type_error_When_set_default_adapters_is_called_with_non_adapter_base(self):
+    def test_Should_raise_type_error_When_set_default_adapters_is_called_with_non_adapter_base(
+        self,
+    ):
         with pytest.raises(TypeError):
             set_default_adapters(1)
         with pytest.raises(TypeError):
             set_default_adapters(EnvAdapter(), 1)
 
-    def test_Should_set_default_adapters_to_given_adapters_When_set_default_adapters_is_called_with_adapters(self):
+    def test_Should_set_default_adapters_to_given_adapters_When_set_default_adapters_is_called_with_adapters(
+        self,
+    ):
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -241,7 +273,9 @@ class TestConfig:
         stub_config = StubConfig()
         assert stub_config.field_stub() == adapter_response
 
-    def test_Should_update_and_use_class_adapters_When_adapters_set_using_decorator_args(self):
+    def test_Should_update_and_use_class_adapters_When_adapters_set_using_decorator_args(
+        self,
+    ):
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -255,7 +289,9 @@ class TestConfig:
         stub_config = StubConfig()
         assert stub_config.field_stub() == adapter_response
 
-    def test_Should_update_and_use_class_adapters_When_adapters_set_using_set_default_adapters(self):
+    def test_Should_update_and_use_class_adapters_When_adapters_set_using_set_default_adapters(
+        self,
+    ):
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -271,7 +307,9 @@ class TestConfig:
         stub_config = StubConfig()
         assert stub_config.field_stub() == adapter_response
 
-    def test_Should_prioritize_config_args_When_config_has_adapters_and_default_is_also_set(self):
+    def test_Should_prioritize_config_args_When_config_has_adapters_and_default_is_also_set(
+        self,
+    ):
         default_adapter = MagicMock(AdapterBase)
 
         arg_adapter = MagicMock(AdapterBase)
@@ -289,7 +327,9 @@ class TestConfig:
         stub_config = StubConfig()
         assert stub_config.field_stub() == adapter_response
 
-    def test_Should_only_configure_methods_with_field_decorator_When_config_is_called(self):
+    def test_Should_only_configure_methods_with_field_decorator_When_config_is_called(
+        self,
+    ):
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -360,7 +400,9 @@ class TestConfig:
         assert method_adapter.get_field.call_count == 1
         assert class_adapter.get_field.call_count == 1
 
-    def test_Should_update_field_methods_with_decorated_config_decorator_When_class_is_decorated_with_config(self):
+    def test_Should_update_field_methods_with_decorated_config_decorator_When_class_is_decorated_with_config(
+        self,
+    ):
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -375,7 +417,9 @@ class TestConfig:
         assert stub_config.field_stub() == adapter_response
         assert stub_config.field_stub.__name__ == "decorated_config_wrapper"
 
-    def test_Should_add_reset_deconfig_cache_method_When_class_is_decorated_with_config(self):
+    def test_Should_add_reset_deconfig_cache_method_When_class_is_decorated_with_config(
+        self,
+    ):
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -392,7 +436,9 @@ class TestConfig:
         assert callable(stub_config.reset_deconfig_cache)
         stub_config.reset_deconfig_cache()
 
-    def test_Should_not_create_reset_deconfig_cache_When_class_already_has_reset_deconfig_cache_method(self):
+    def test_Should_not_create_reset_deconfig_cache_When_class_already_has_reset_deconfig_cache_method(
+        self,
+    ):
         adapter = MagicMock(AdapterBase)
         adapter_response = MagicMock("adapter_response")
         adapter.get_field.return_value = adapter_response
@@ -415,18 +461,27 @@ class TestConfig:
 
 
 class TestDecoratedConfigDecorator:
-    def test_Should_raise_value_error_When_field_name_is_not_present(self, stub_callable):
+    def test_Should_raise_value_error_When_field_name_is_not_present(
+        self, stub_callable
+    ):
         with pytest.raises(ValueError) as e:
             decorated_config_decorator(stub_callable)
-        assert str(e.value) == "Have you forgotten to decorate field with @field(name='name')?"
+        assert (
+            str(e.value)
+            == "Have you forgotten to decorate field with @field(name='name')?"
+        )
 
-    def test_Should_raise_value_error_When_adapters_are_not_present(self, stub_callable):
+    def test_Should_raise_value_error_When_adapters_are_not_present(
+        self, stub_callable
+    ):
         stub_callable.name = "test"
         with pytest.raises(ValueError) as e:
             decorated_config_decorator(stub_callable)
         assert str(e.value) == "Class not decorated with @config"
 
-    def test_Should_mandate_field_be_present_in_config_false_When_optional_is_not_set_or_is_false(self):
+    def test_Should_mandate_field_be_present_in_config_false_When_optional_is_not_set_or_is_false(
+        self,
+    ):
         adapter = MagicMock()
         adapter.get_field.side_effect = AdapterError("Value not found")
 
@@ -446,12 +501,16 @@ class TestDecoratedConfigDecorator:
         stub_callable_with_optional_false.name = "test_2"
         stub_callable_with_optional_false.adapters = [adapter]
         stub_callable_with_optional_false.optional = False
-        response_callback = decorated_config_decorator(stub_callable_with_optional_false)
+        response_callback = decorated_config_decorator(
+            stub_callable_with_optional_false
+        )
         with pytest.raises(ValueError) as e:
             response_callback()
         assert str(e.value) == "Field test_2 not found in any config."
 
-    def test_Should_set_optional_to_true_When_optional_is_set_to_true(self, stub_callable):
+    def test_Should_set_optional_to_true_When_optional_is_set_to_true(
+        self, stub_callable
+    ):
         adapter = MagicMock()
         adapter.get_field.side_effect = AdapterError("Value not found")
 
@@ -473,7 +532,9 @@ class TestDecoratedConfigDecorator:
         response()
         validation_callback.assert_called_once_with(1)
 
-    def test_Should_raise_value_error_When_validation_callback_raises_error(self, stub_callable):
+    def test_Should_raise_value_error_When_validation_callback_raises_error(
+        self, stub_callable
+    ):
         adapter = MagicMock()
         validation_callback = MagicMock()
         validation_callback.side_effect = ValueError("Validation error")
@@ -499,7 +560,9 @@ class TestDecoratedConfigDecorator:
         assert response() == 2
         transform_callback.assert_called_once_with(1)
 
-    def test_Should_cache_transformed_response_When_invoked_and_has_transformer(self, stub_callable):
+    def test_Should_cache_transformed_response_When_invoked_and_has_transformer(
+        self, stub_callable
+    ):
         adapter = MagicMock()
         adapter.get_field.side_effect = [1]
         stub_callable.name = "test"

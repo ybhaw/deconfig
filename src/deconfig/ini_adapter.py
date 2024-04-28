@@ -53,6 +53,7 @@ class IniAdapter(AdapterBase):
             return "default" # Will look for "foo" in "section1" of "/path/to/config.ini"
     ```
     """
+
     _ini_adapter_default_paths: Optional[List[str]] = None
 
     @staticmethod
@@ -87,6 +88,7 @@ class IniAdapter(AdapterBase):
                 return "default"
         ```
         """
+
         def decorator(func: Callable[..., T]):
             adapters = FieldUtil.get_adapter_configs(func)
             config: _IniAdapterConfig = adapters.get(IniAdapter, _IniAdapterConfig())
@@ -120,10 +122,10 @@ class IniAdapter(AdapterBase):
         cls._ini_adapter_default_paths = file_paths
 
     def __init__(
-            self,
-            section_name: str,
-            file_names: Optional[List[str]] = None,
-            override_files: bool = False
+        self,
+        section_name: str,
+        file_names: Optional[List[str]] = None,
+        override_files: bool = False,
     ):
         self.file_names: Optional[List[str]] = file_names
         self.section_name: str = section_name
@@ -132,9 +134,9 @@ class IniAdapter(AdapterBase):
             logger.warning("No INI files specified for IniAdapter")
 
     def _get_file_names(
-            self,
-            configuration_file_names: Optional[List[str]] = None,
-            configuration_override_files_flag: bool = False,
+        self,
+        configuration_file_names: Optional[List[str]] = None,
+        configuration_override_files_flag: bool = False,
     ) -> List[str]:
         ini_files = []
         if self._ini_adapter_default_paths is not None:
@@ -152,16 +154,19 @@ class IniAdapter(AdapterBase):
         return ini_files
 
     def get_field(
-            self, field_name: str, method: Callable[..., T], *method_args, **method_kwargs
+        self, field_name: str, method: Callable[..., T], *method_args, **method_kwargs
     ) -> Any:
         section_name = self.section_name
         option_name = field_name
 
-        ini_config: _IniAdapterConfig = FieldUtil.get_adapter_configs(method).get(IniAdapter)
+        adapter_configs = FieldUtil.get_adapter_configs(method)
+        ini_config: _IniAdapterConfig = adapter_configs.get(IniAdapter)
         if ini_config is not None:
             section_name = ini_config.section_name or section_name
             option_name = ini_config.option_name or option_name
-            file_paths = self._get_file_names(ini_config.file_paths, ini_config.override_files)
+            file_paths = self._get_file_names(
+                ini_config.file_paths, ini_config.override_files
+            )
         else:
             file_paths = self._get_file_names()
 

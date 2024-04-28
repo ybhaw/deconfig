@@ -4,7 +4,9 @@ from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 about = {}
-with open(os.path.join(here, "src", "deconfig", "__version__.py"), "r", encoding="utf-8") as f:
+with open(
+    os.path.join(here, "src", "deconfig", "__version__.py"), "r", encoding="utf-8"
+) as f:
     exec(f.read(), about)
 
 if "DEV_VERSION_SUFFIX" in os.environ:

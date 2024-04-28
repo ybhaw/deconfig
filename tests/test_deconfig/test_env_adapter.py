@@ -31,12 +31,15 @@ class TestEnvAdapter:
     def test_Should_be_extending_adapter_base_When_checked_for_subclass(self):
         assert issubclass(EnvAdapter, AdapterBase)
 
-    # pylint: disable=import-outside-toplevel, reimported, redefined-outer-name
-    def test_Should_be_importable_from_deconfig_and_env_adapter_modules_When_imported(self):
-        from deconfig import EnvAdapter
-        _ = EnvAdapter()
-        from deconfig.env_adapter import EnvAdapter
-        _ = EnvAdapter()
+    # pylint: disable=import-outside-toplevel
+    def test_Should_be_importable_from_deconfig_and_env_adapter_modules_When_imported(
+        self,
+    ):
+        from deconfig import EnvAdapter as DeconfigEnvAdapter
+        from deconfig.env_adapter import EnvAdapter as EnvEnvAdapter
+
+        _ = DeconfigEnvAdapter()
+        _ = EnvEnvAdapter()
 
     def test_Should_not_add_a_prefix_When_default_env_adapter_is_used(self):
         adapter = EnvAdapter()
@@ -102,7 +105,9 @@ class TestEnvAdapter:
         os.environ[field_name.upper()] = "stub_value"
 
         adapter = EnvAdapter(prefix)
-        field_callback = EnvAdapter.configure(ignore_prefix=True)(field(field_name)(lambda: None))
+        field_callback = EnvAdapter.configure(ignore_prefix=True)(
+            field(field_name)(lambda: None)
+        )
         assert adapter.get_field(field_name, field_callback) == "stub_value"
 
     def test_Should_raise_attribute_error_When_env_variable_is_not_set(self):

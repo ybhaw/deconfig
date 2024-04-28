@@ -26,7 +26,7 @@ class AdapterBase(ABC):
 
     @abstractmethod
     def get_field(
-            self, field_name: str, method: Callable[..., T], *method_args, **method_kwargs
+        self, field_name: str, method: Callable[..., T], *method_args, **method_kwargs
     ) -> Any:
         """
         Use this method to initialize the field in configuration.
@@ -50,7 +50,9 @@ class FieldUtil:
     """
 
     @classmethod
-    def get_adapter_configs(cls, function: Callable[..., T]) -> Dict[Type[AdapterBase], Any]:
+    def get_adapter_configs(
+        cls, function: Callable[..., T]
+    ) -> Dict[Type[AdapterBase], Any]:
         """
         Get adapter list from function.
         """
@@ -67,7 +69,7 @@ class FieldUtil:
 
     @classmethod
     def upsert_adapter_config(
-            cls, function: Callable[..., T], adapter: Type[AdapterBase], config: Any
+        cls, function: Callable[..., T], adapter: Type[AdapterBase], config: Any
     ):
         """
         Add adapter to the function.
@@ -86,7 +88,9 @@ class FieldUtil:
         return getattr(function, "adapters")
 
     @classmethod
-    def set_adapters(cls, function: Callable[..., T], adapters: List[AdapterBase]) -> None:
+    def set_adapters(
+        cls, function: Callable[..., T], adapters: List[AdapterBase]
+    ) -> None:
         """
         Set adapter list to function.
         """
@@ -134,7 +138,7 @@ class FieldUtil:
 
     @classmethod
     def add_validation_callback(
-            cls, function: Callable[..., T], callback: Callable[..., T]
+        cls, function: Callable[..., T], callback: Callable[..., T]
     ) -> None:
         """
         Add validation callback to the function.
@@ -142,7 +146,9 @@ class FieldUtil:
         setattr(function, "validation_callback", callback)
 
     @classmethod
-    def get_validation_callback(cls, function: Callable[..., T]) -> Optional[Callable[..., T]]:
+    def get_validation_callback(
+        cls, function: Callable[..., T]
+    ) -> Optional[Callable[..., T]]:
         """
         Get validation callback from the function.
         """
@@ -163,14 +169,18 @@ class FieldUtil:
         return getattr(function, "optional", False)
 
     @classmethod
-    def add_transform_callback(cls, function: Callable[..., T], callback: Callable[..., T]) -> None:
+    def add_transform_callback(
+        cls, function: Callable[..., T], callback: Callable[..., T]
+    ) -> None:
         """
         Add transform callback to the function.
         """
         setattr(function, "transform_callback", callback)
 
     @classmethod
-    def get_transform_callback(cls, function: Callable[..., T]) -> Optional[Callable[..., T]]:
+    def get_transform_callback(
+        cls, function: Callable[..., T]
+    ) -> Optional[Callable[..., T]]:
         """
         Get transform callback from the function.
         """
@@ -209,7 +219,7 @@ class FieldUtil:
 
     @classmethod
     def set_original_function(
-            cls, wrapper_function: Callable[..., T], original_function: Callable[..., T]
+        cls, wrapper_function: Callable[..., T], original_function: Callable[..., T]
     ) -> None:
         """
         Set original function to the wrapper function.
@@ -217,7 +227,9 @@ class FieldUtil:
         setattr(wrapper_function, "original_function", original_function)
 
     @classmethod
-    def get_original_function(cls, wrapper_function: Callable[..., T]) -> Callable[..., T]:
+    def get_original_function(
+        cls, wrapper_function: Callable[..., T]
+    ) -> Callable[..., T]:
         """
         Get original function from the wrapper function.
         """
