@@ -39,7 +39,7 @@ class ExampleConfig:
 
 
 config = ExampleConfig()
-config.get_foo() # Returns "bar"
+config.get_foo()  # Returns "bar"
 ```
 
 ## Features
@@ -63,9 +63,10 @@ class ExampleConfig:
     def get_bar(self):
         pass
 
+
 config = ExampleConfig()
-config.get_foo() # Returns None
-config.get_bar() # Raises ValueError
+config.get_foo()  # Returns None
+config.get_bar()  # Raises ValueError
 ```
 
 ### Transformers
@@ -97,9 +98,9 @@ class ExampleConfig:
 
 
 config = ExampleConfig()
-config.get_foo() # Returns 1
-config.get_bar() # Returns ["default", "values"]
-config.get_baz() # Returns "Hello"
+config.get_foo()  # Returns 1
+config.get_bar()  # Returns ["default", "values"]
+config.get_baz()  # Returns "Hello"
 ```
 
 ### Validator callbacks
@@ -108,6 +109,7 @@ You can also add custom validation logic to your fields.
 
 ```python
 import deconfig as de
+
 
 def is_even(value) -> None:
     if not value % 2:
@@ -125,9 +127,10 @@ class ExampleConfig:
     def get_bar(self):
         return 3
 
+
 config = ExampleConfig()
-config.get_foo() # Returns 2
-config.get_bar() # Raises ValueError
+config.get_foo()  # Returns 2
+config.get_bar()  # Raises ValueError
 ```
 
 ## Customizations
