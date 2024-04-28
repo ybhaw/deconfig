@@ -141,3 +141,6 @@ workflows:
               branches:
                 only:
                     - main
+  run-coverage:
+    jobs:
+      - coverage
