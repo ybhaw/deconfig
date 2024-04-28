@@ -177,10 +177,7 @@ def config(adapters: Optional[List[AdapterBase]] = None):
     def wrapper(class_: Type[AdapterBase]):
         for name, getter_function in class_.__dict__.items():
             # Skip non-field methods
-            if (
-                not callable(getter_function)
-                or not FieldUtil.has_name(getter_function)
-            ):
+            if not callable(getter_function) or not FieldUtil.has_name(getter_function):
                 continue
 
             # Field adapters get priority
