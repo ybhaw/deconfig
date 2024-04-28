@@ -1,3 +1,21 @@
+"""
+Deconfig is a library that allows you to easily manage configuration for your application.
+It is decorator driven, which means you can easily add configuration to your class methods.
+
+Example Usage:
+
+```python
+from deconfig import config, field, EnvAdapter
+
+
+@config([EnvAdapter()])
+class ExampleConfig:
+    @field(name="foo")
+    def get_foo(self) -> str:
+        return "default"  # Returns value of "FOO" environment variable
+```
+"""
+
 from typing import Optional, TypeVar, Callable, List, Type
 
 from deconfig.core import FieldUtil, AdapterError, AdapterBase
@@ -21,7 +39,9 @@ def decorated_config_decorator(getter_function: Callable[..., T]) -> Callable[..
 
     # Get decorator values from getter function
     if not FieldUtil.has_name(getter_function):
-        raise ValueError("Have you forgotten to decorate field with @field(name='name')?")
+        raise ValueError(
+            "Have you forgotten to decorate field with @field(name='name')?"
+        )
     name = FieldUtil.get_name(getter_function)
 
     if not FieldUtil.has_adapters(getter_function):
@@ -52,14 +72,14 @@ def decorated_config_decorator(getter_function: Callable[..., T]) -> Callable[..
         except AdapterError as e:
             if optional_ is False:
                 raise ValueError(f"Field {name} not found in any config.") from e
-            else:
-                response = getter_function(*args, **kwargs)
+            response = getter_function(*args, **kwargs)
         if transform_callback_ is not None:
             response = transform_callback_(response)
         if validation_callback_ is not None:
             validation_callback_(response)
         FieldUtil.set_cached_response(getter_function, response)
         return response
+
     FieldUtil.set_original_function(decorated_config_wrapper, getter_function)
     return decorated_config_wrapper
 
@@ -70,7 +90,9 @@ def _reset_cache(obj: T) -> T:
     """
     for name in dir(obj):
         getter_function = getattr(obj, name)
-        if not callable(getter_function) or not FieldUtil.has_original_function(getter_function):
+        if not callable(getter_function) or not FieldUtil.has_original_function(
+            getter_function
+        ):
             continue
         getter_function = FieldUtil.get_original_function(getter_function)
         if FieldUtil.has_cached_response(getter_function):
@@ -100,6 +122,7 @@ def field(name: str) -> Callable[..., T]:
         FieldUtil.set_name(func, name)
         FieldUtil.initialize_adapter_configs(func)
         return func
+
     return wrapper
 
 
@@ -116,6 +139,7 @@ def optional(is_optional: bool = True) -> Callable[..., T]:
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
         FieldUtil.set_optional(func, is_optional)
         return func
+
     return wrapper
 
 
@@ -133,6 +157,7 @@ def validate(callback: Callable[..., None]) -> Callable[..., T]:
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
         FieldUtil.add_validation_callback(func, callback)
         return func
+
     return wrapper
 
 
@@ -145,11 +170,12 @@ def add_adapter(adapter_: AdapterBase) -> Callable[..., T]:
         raise TypeError("Adapter is required.")
 
     if not hasattr(adapter_, AdapterBase.get_field.__name__):
-        raise TypeError(f"Adapter must extend AdapterBase or have get_field method")
+        raise TypeError("Adapter must extend AdapterBase or have get_field method")
 
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
         FieldUtil.add_adapter(func, adapter_)
         return func
+
     return wrapper
 
 
@@ -162,7 +188,7 @@ def set_default_adapters(*adapters: AdapterBase) -> None:
         raise TypeError("At least one adapter is required.")
     if not all(hasattr(a, AdapterBase.get_field.__name__) for a in adapters):
         raise TypeError("All adapters must be instance of AdapterBase.")
-    global _adapters
+    global _adapters  # pylint: disable=global-statement
     _adapters = adapters
 
 
@@ -170,7 +196,6 @@ def config(adapters: Optional[List[AdapterBase]] = None):
     """
     Decorator for the config class.
     """
-    global _adapters
     if adapters is None:
         adapters = _adapters
 
@@ -193,6 +218,7 @@ def config(adapters: Optional[List[AdapterBase]] = None):
         if not hasattr(class_, "reset_deconfig_cache"):
             setattr(class_, "reset_deconfig_cache", _reset_cache)
         return class_
+
     return wrapper
 
 
@@ -203,10 +229,8 @@ __all__ = [
     "add_adapter",
     "set_default_adapters",
     "config",
-
     # Transformers
     "transform",
-
     # Adapters
     "EnvAdapter",
     "IniAdapter",
