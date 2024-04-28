@@ -1,5 +1,7 @@
 # <span style="color:#cb09d7">De</span><span style="color: #635ec4">co</span><span style="color:#c7fe59">nfig</span>
 
+[![codecov](https://codecov.io/gh/ybhaw/deconfig/graph/badge.svg?token=8TJ1QVCF2E)](https://codecov.io/gh/ybhaw/deconfig)
+
 <b><span style="color:#cb09d7">Decorator </span>
 <span style="color:#635ec4">+</span>
 <span style="color:#c7fe59">Config</span></b>
@@ -39,7 +41,7 @@ class ExampleConfig:
 
 
 config = ExampleConfig()
-config.get_foo() # Returns "bar"
+config.get_foo()  # Returns "bar"
 ```
 
 ## Features
@@ -63,9 +65,10 @@ class ExampleConfig:
     def get_bar(self):
         pass
 
+
 config = ExampleConfig()
-config.get_foo() # Returns None
-config.get_bar() # Raises ValueError
+config.get_foo()  # Returns None
+config.get_bar()  # Raises ValueError
 ```
 
 ### Transformers
@@ -97,9 +100,9 @@ class ExampleConfig:
 
 
 config = ExampleConfig()
-config.get_foo() # Returns 1
-config.get_bar() # Returns ["default", "values"]
-config.get_baz() # Returns "Hello"
+config.get_foo()  # Returns 1
+config.get_bar()  # Returns ["default", "values"]
+config.get_baz()  # Returns "Hello"
 ```
 
 ### Validator callbacks
@@ -108,6 +111,7 @@ You can also add custom validation logic to your fields.
 
 ```python
 import deconfig as de
+
 
 def is_even(value) -> None:
     if not value % 2:
@@ -125,9 +129,10 @@ class ExampleConfig:
     def get_bar(self):
         return 3
 
+
 config = ExampleConfig()
-config.get_foo() # Returns 2
-config.get_bar() # Raises ValueError
+config.get_foo()  # Returns 2
+config.get_bar()  # Raises ValueError
 ```
 
 ## Customizations
@@ -158,3 +163,7 @@ deconfig. Check out the documentation for more information.
 
 - [Documentation](https://deconfig.readthedocs.io) # TODO
 - [GitHub](https://github.com/ybhaw/deconfig.git) # TODO
+
+
+## TODOs:
+- Add coverage

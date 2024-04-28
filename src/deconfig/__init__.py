@@ -1,6 +1,8 @@
 from typing import Optional, TypeVar, Callable, List, Type
 
-from deconfig.core import FieldUtil, AdapterError, AdapterBase, EnvAdapter, IniAdapter
+from deconfig.core import FieldUtil, AdapterError, AdapterBase
+from deconfig.ini_adapter import IniAdapter
+from deconfig.env_adapter import EnvAdapter
 from deconfig.transformer import transform
 from deconfig.__version__ import __version__
 
@@ -42,8 +44,8 @@ def decorated_config_decorator(getter_function: Callable[..., T]) -> Callable[..
         raise AdapterError("Value not found in any config")
 
     def decorated_config_wrapper(*args, **kwargs) -> T:
-        if FieldUtil.has_cache_response(getter_function):
-            return FieldUtil.get_cache_response(getter_function)
+        if FieldUtil.has_cached_response(getter_function):
+            return FieldUtil.get_cached_response(getter_function)
 
         try:
             response = build_response_from_config(*args, **kwargs)
@@ -54,11 +56,9 @@ def decorated_config_decorator(getter_function: Callable[..., T]) -> Callable[..
                 response = getter_function(*args, **kwargs)
         if transform_callback_ is not None:
             response = transform_callback_(response)
-        if optional_ is False and response is None:
-            raise ValueError(f"Field {name} not found in any config.")
         if validation_callback_ is not None:
             validation_callback_(response)
-        FieldUtil.set_cache_response(getter_function, response)
+        FieldUtil.set_cached_response(getter_function, response)
         return response
     FieldUtil.set_original_function(decorated_config_wrapper, getter_function)
     return decorated_config_wrapper
@@ -73,8 +73,8 @@ def _reset_cache(obj: T) -> T:
         if not callable(getter_function) or not FieldUtil.has_original_function(getter_function):
             continue
         getter_function = FieldUtil.get_original_function(getter_function)
-        if FieldUtil.has_cache_response(getter_function):
-            FieldUtil.delete_cache_response(getter_function)
+        if FieldUtil.has_cached_response(getter_function):
+            FieldUtil.delete_cached_response(getter_function)
     return obj
 
 
@@ -179,9 +179,6 @@ def config(adapters: Optional[List[AdapterBase]] = None):
             # Skip non-field methods
             if not callable(getter_function) or not FieldUtil.has_name(getter_function):
                 continue
-
-            if not FieldUtil.has_adapter_configs(getter_function):
-                FieldUtil.initialize_adapter_configs(getter_function)
 
             # Field adapters get priority
             field_adapters = adapters

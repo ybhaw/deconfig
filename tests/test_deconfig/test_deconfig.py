@@ -2,7 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from deconfig.core import AdapterBase, EnvAdapter, AdapterError
+from deconfig import optional, EnvAdapter
+from deconfig.core import AdapterBase, AdapterError
 
 
 @pytest.mark.parametrize(
@@ -24,6 +25,12 @@ def test_Should_have_expected_field_When_deconfig_is_imported(import_name):
 
 
 class TestField:
+    def test_Should_raise_TypeError_When_name_is_none(self):
+        from deconfig import field
+
+        with pytest.raises(TypeError) as e:
+            field(None)(lambda: None)
+        assert str(e.value) == "Name is required."
 
     def test_Should_raise_TypeError_When_argument_is_not_string(self):
         from deconfig import field
@@ -33,17 +40,15 @@ class TestField:
                 raise TypeError("Not a string")
 
         with pytest.raises(TypeError):
-            @field(NotString())
-            def test_field():
-                pass
+            field(NotString())(lambda: None)
 
     def test_Should_set_attribute_name_When_field_is_called(self):
         from deconfig import field
+        test_field = lambda: None
 
-        @field("test")
-        def test_field():
-            pass
+        test_field_decorated = field("test")(test_field)
 
+        assert test_field_decorated == test_field
         assert hasattr(test_field, "name")
         assert test_field.name == "test"
 
@@ -64,12 +69,11 @@ class TestOptional:
     def test_Should_set_attribute_optional_When_optional_is_called(self):
         from deconfig import optional
 
-        @optional()
-        def test_optional():
-            pass
-
-        assert hasattr(test_optional, "optional")
-        assert test_optional.optional is True
+        callable_stub = lambda: None
+        response = optional()(callable_stub)
+        assert hasattr(response, "optional")
+        assert response.optional is True
+        assert response == callable_stub
 
     def test_Should_return_same_function_When_optional_is_called(self):
         from deconfig import optional
@@ -79,21 +83,13 @@ class TestOptional:
 
     def test_Should_set_attribute_optional_to_True_When_optional_is_called_with_True(self):
         from deconfig import optional
-
-        @optional(True)
-        def test_optional():
-            pass
-
+        test_optional = optional(True)(lambda: None)
         assert hasattr(test_optional, "optional")
         assert test_optional.optional is True
 
     def test_Should_set_attribute_optional_to_False_When_optional_is_called_with_False(self):
         from deconfig import optional
-
-        @optional(False)
-        def test_optional():
-            pass
-
+        test_optional = optional(False)(lambda: None)
         assert hasattr(test_optional, "optional")
         assert test_optional.optional is False
 
@@ -105,25 +101,17 @@ class TestOptional:
                 raise TypeError("Not a bool")
 
         with pytest.raises(TypeError):
-            @optional(NotBool())
-            def test_optional():
-                pass
+            optional(NotBool())(lambda: None)
 
 
 class TestValidationCallback:
 
     def test_Should_set_attribute_validation_callback_When_validate_is_called(self):
         from deconfig import validate
-
-        def mock_validation_callback():
-            pass
-
-        @validate(mock_validation_callback)
-        def test_validate():
-            pass
-
-        assert hasattr(test_validate, "validation_callback")
-        assert test_validate.validation_callback == mock_validation_callback
+        mock_validation_callback = lambda: None
+        test_validation = validate(mock_validation_callback)(lambda: None)
+        assert hasattr(test_validation, "validation_callback")
+        assert test_validation.validation_callback == mock_validation_callback
 
     def test_Should_return_same_function_When_validate_is_called(self):
         from deconfig import validate
@@ -134,34 +122,24 @@ class TestValidationCallback:
     def test_Should_raise_TypeError_When_argument_is_None(self):
         from deconfig import validate
         with pytest.raises(TypeError):
-            @validate(None)
-            def test_validate():
-                pass
+            validate(None)(lambda: None)
 
     def test_Should_raise_TypeError_When_argument_is_not_callable(self):
         from deconfig import validate
         with pytest.raises(TypeError):
-            @validate(1)
-            def test_validate():
-                pass
+            validate(1)(lambda: None)
 
 
 class TestAddAdapter:
     def test_Should_set_attribute_adapters_When_add_adapter_is_called(self):
         from deconfig import add_adapter
-
         mock_adapter = MagicMock(AdapterBase)
-
-        @add_adapter(mock_adapter())
-        def get_field_with_added_adapter():
-            pass
-
+        get_field_with_added_adapter = add_adapter(mock_adapter())(lambda: None)
         assert hasattr(get_field_with_added_adapter, "adapters")
         assert get_field_with_added_adapter.adapters == [mock_adapter.return_value]
 
     def test_Should_return_same_function_When_add_adapter_is_called(self):
         from deconfig import add_adapter
-
         mock = MagicMock(AdapterBase)
         response_callback = add_adapter(mock)(mock)
         assert response_callback == mock
@@ -188,12 +166,8 @@ class TestAddAdapter:
         from deconfig import add_adapter
 
         mock_adapter = MagicMock(AdapterBase)
-
-        def field_stub():
-            pass
-
+        field_stub = lambda: None
         assert not hasattr(field_stub, "adapters")
-
         field_decorated = add_adapter(mock_adapter())(field_stub)
         assert hasattr(field_decorated, "adapters")
         assert field_decorated.adapters == [mock_adapter.return_value]
@@ -201,16 +175,12 @@ class TestAddAdapter:
     def test_Should_raise_ValueError_When_argument_is_None(self):
         from deconfig import add_adapter
         with pytest.raises(TypeError):
-            @add_adapter(None)
-            def test_add_adapter():
-                pass
+            add_adapter(None)(lambda: None)
 
     def test_Should_raise_ValueError_When_argument_is_not_AdapterBase(self):
         from deconfig import add_adapter
         with pytest.raises(TypeError):
-            @add_adapter(1)
-            def test_add_adapter():
-                pass
+            add_adapter(1)(lambda: None)
 
 
 class TestSetDefaultAdapters:
@@ -228,11 +198,11 @@ class TestSetDefaultAdapters:
         @config()
         class TestConfig:
             @field(name="test")
-            def test_field(self):
-                pass
+            def stub_field(self):
+                """Stub field"""
 
         test_config = TestConfig()
-        assert test_config.test_field() == config_response
+        assert test_config.stub_field() == config_response
 
     def test_Should_raise_TypeError_When_set_default_adapters_is_called_with_no_adapters(self):
         from deconfig import set_default_adapters
@@ -258,7 +228,7 @@ class TestSetDefaultAdapters:
         class MockConfig:
             @field(name="field")
             def test_field(self):
-                pass
+                """Stub field"""
 
         config = MockConfig()
         assert config.test_field() == adapter_response
@@ -278,7 +248,7 @@ class TestConfig:
         class ConfigStub:
             @field(name="test")
             def field_stub(self):
-                pass
+                """Stub Field"""
 
         config = ConfigStub()
         assert config.field_stub() == adapter_response
@@ -293,7 +263,7 @@ class TestConfig:
         class ConfigStub:
             @field(name="test")
             def field_stub(self):
-                pass
+                """Stub Field"""
 
         config = ConfigStub()
         assert config.field_stub() == adapter_response
@@ -310,7 +280,7 @@ class TestConfig:
         class ConfigStub:
             @field(name="test")
             def field_stub(self):
-                pass
+                """Stub Field"""
 
         config = ConfigStub()
         assert config.field_stub() == adapter_response
@@ -330,7 +300,7 @@ class TestConfig:
         class ConfigStub:
             @field(name="test")
             def field_stub(self):
-                pass
+                """Stub Field"""
 
         config = ConfigStub()
         assert config.field_stub() == adapter_response
@@ -349,7 +319,7 @@ class TestConfig:
 
             @field(name="test")
             def method_with_field_decorator(self):
-                return 2
+                """Field with adapter"""
 
         config = ConfigStub()
         assert config.method_with_field_decorator() == adapter_response
@@ -372,11 +342,11 @@ class TestConfig:
             @add_adapter(method_adapter)
             @field(name="test")
             def method_with_field_adapter(self):
-                return 2
+                """Field with adapter"""
 
             @field(name="test_2")
             def method_without_field_decorator(self):
-                return 2
+                """Field without adapter"""
 
         config = ConfigStub()
         assert config.method_with_field_adapter() == adapter_response
@@ -399,11 +369,11 @@ class TestConfig:
             @add_adapter(method_adapter)
             @field(name="test")
             def method_with_field_adapter(self):
-                return 2
+                """Field with adapter"""
 
             @field(name="test_2")
             def method_without_field_decorator(self):
-                return 2
+                """Field without adapter"""
 
         config = ConfigStub()
         assert config.method_with_field_adapter() == default_adapter_response
@@ -421,7 +391,7 @@ class TestConfig:
         class ConfigStub:
             @field(name="test")
             def field_stub(self):
-                pass
+                """Stub Field"""
 
         config = ConfigStub()
         assert config.field_stub() == adapter_response
@@ -438,7 +408,7 @@ class TestConfig:
         class ConfigStub:
             @field(name="test")
             def field_stub(self):
-                pass
+                """Stub Field"""
 
         config = ConfigStub()
         config.field_stub()
@@ -459,7 +429,7 @@ class TestConfig:
         class ConfigStub:
             @field(name="test")
             def field_stub(self):
-                pass
+                """Stub Field"""
 
             def reset_deconfig_cache(self):
                 return config_cache_stub
@@ -471,18 +441,14 @@ class TestConfig:
 
 class TestDecoratedConfigDecorator:
     def test_Should_raise_ValueError_When_field_name_is_not_present(self):
-        def callable_stub():
-            pass
-
+        callable_stub = lambda: None
         with pytest.raises(ValueError) as e:
             from deconfig import decorated_config_decorator
             decorated_config_decorator(callable_stub)
         assert str(e.value) == "Have you forgotten to decorate field with @field(name='name')?"
 
     def test_Should_raise_ValueError_When_adapters_are_not_present(self):
-        def callable_stub():
-            pass
-
+        callable_stub = lambda: None
         callable_stub.name = "test"
         with pytest.raises(ValueError) as e:
             from deconfig import decorated_config_decorator
@@ -602,22 +568,27 @@ class TestDecoratedConfigDecorator:
         from deconfig import config, field
 
         adapter = MagicMock(AdapterBase)
-        adapter.get_field.side_effect = [1, 2]
+        adapter.get_field.side_effect = [AdapterError, 1, 2]
 
         @config([adapter])
         class ConfigStub:
+            @optional()
             @field(name="test")
             def field_stub(self):
-                pass
+                return 0
 
         config = ConfigStub()
-        assert config.field_stub() == 1
-        assert config.field_stub() == 1
+        assert config.field_stub() == 0
+        assert config.field_stub() == 0
         assert adapter.get_field.call_count == 1
+        config.reset_deconfig_cache()
+        assert config.field_stub() == 1
+        assert config.field_stub() == 1
+        assert adapter.get_field.call_count == 2
         config.reset_deconfig_cache()
         assert config.field_stub() == 2
         assert config.field_stub() == 2
-        assert adapter.get_field.call_count == 2
+        assert adapter.get_field.call_count == 3
 
     def test_Should_call_adapters_in_sequence_When_invoked(self):
         from deconfig import decorated_config_decorator
