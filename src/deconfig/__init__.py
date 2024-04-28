@@ -1,3 +1,22 @@
+"""
+Deconfig is a library that allows you to easily manage configuration for your application.
+It is decorator driven, which means you can easily add configuration to your class methods.
+
+Example Usage:
+
+```python
+from deconfig import config, field, EnvAdapter
+
+
+@config([EnvAdapter()])
+class ExampleConfig:
+    @field(name="foo")
+    def get_foo(self) -> str:
+        return "default"  # Returns value of "FOO" environment variable
+```
+"""
+
+
 from typing import Optional, TypeVar, Callable, List, Type
 
 from deconfig.core import FieldUtil, AdapterError, AdapterBase
@@ -52,8 +71,7 @@ def decorated_config_decorator(getter_function: Callable[..., T]) -> Callable[..
         except AdapterError as e:
             if optional_ is False:
                 raise ValueError(f"Field {name} not found in any config.") from e
-            else:
-                response = getter_function(*args, **kwargs)
+            response = getter_function(*args, **kwargs)
         if transform_callback_ is not None:
             response = transform_callback_(response)
         if validation_callback_ is not None:
@@ -145,7 +163,7 @@ def add_adapter(adapter_: AdapterBase) -> Callable[..., T]:
         raise TypeError("Adapter is required.")
 
     if not hasattr(adapter_, AdapterBase.get_field.__name__):
-        raise TypeError(f"Adapter must extend AdapterBase or have get_field method")
+        raise TypeError("Adapter must extend AdapterBase or have get_field method")
 
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
         FieldUtil.add_adapter(func, adapter_)
@@ -162,7 +180,7 @@ def set_default_adapters(*adapters: AdapterBase) -> None:
         raise TypeError("At least one adapter is required.")
     if not all(hasattr(a, AdapterBase.get_field.__name__) for a in adapters):
         raise TypeError("All adapters must be instance of AdapterBase.")
-    global _adapters
+    global _adapters  # pylint: disable=global-statement
     _adapters = adapters
 
 
@@ -170,7 +188,6 @@ def config(adapters: Optional[List[AdapterBase]] = None):
     """
     Decorator for the config class.
     """
-    global _adapters
     if adapters is None:
         adapters = _adapters
 

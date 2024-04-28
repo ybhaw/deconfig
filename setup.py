@@ -8,7 +8,7 @@ with open(os.path.join(here, "src", "deconfig", "__version__.py"), "r", encoding
     exec(f.read(), about)
 
 if "DEV_VERSION_SUFFIX" in os.environ:
-    about["__version__"] += os.environ["DEV_VERSION_SUFFIX"]
+    about["__version__"] += "." + os.environ["DEV_VERSION_SUFFIX"]
 
 setup(
     version=about["__version__"],

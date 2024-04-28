@@ -1,3 +1,7 @@
+"""
+Unit tests for the `deconfig.core` module
+"""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -155,7 +159,7 @@ class TestCacheResponse:
         setattr(stub_function, "cached_response", response)
         assert FieldUtil.get_cached_response(stub_function) == response
 
-    def test_Should_raise_ValueError_When_get_cached_response_is_called_and_cached_response_is_not_set(
+    def test_Should_raise_value_error_When_get_cached_response_is_called_and_cached_response_is_not_set(
         self, stub_function
     ):
         with pytest.raises(ValueError):
@@ -191,7 +195,7 @@ class TestOriginalFunction:
         setattr(stub_function, "original_function", original_function)
         assert FieldUtil.get_original_function(stub_function) == original_function
 
-    def test_Should_raise_ValueError_When_get_original_function_is_called_and_original_function_is_not_set(
+    def test_Should_raise_value_error_When_get_original_function_is_called_and_original_function_is_not_set(
         self, stub_function
     ):
         with pytest.raises(ValueError):

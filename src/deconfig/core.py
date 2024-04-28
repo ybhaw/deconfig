@@ -1,3 +1,8 @@
+"""
+Core module for deconfig.
+These can be used to create custom adapters, or to modify behavior of the library.
+"""
+
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 from typing import Callable, TypeVar
@@ -11,30 +16,39 @@ class AdapterError(Exception):
     """
     Raised when adapter fails to get field value.
     """
-    pass
 
 
+# pylint: disable=too-few-public-methods
 class AdapterBase(ABC):
     """
     Base class for all adapters.
     """
 
     @abstractmethod
-    def get_field(self, field_name: str, method: Callable[..., T], *method_args, **method_kwargs) -> Any:
+    def get_field(
+            self, field_name: str, method: Callable[..., T], *method_args, **method_kwargs
+    ) -> Any:
         """
         Use this method to initialize the field in configuration.
-        If field is not present in config, AdapterError should be raised to indicate to library to try next adapter.
+        If field is not present in config, AdapterError should be
+        raised to indicate to library to try next adapter.
 
         :param field_name: Field name as passed in @field
-        :param method: getter method - Use with FieldUtil to get additional properties from the field
-        :param method_args: In case the response of getter is a method, arguments passed will be passed to the method
-        :param method_kwargs: Same as method_args
+        :param method: getter method, use with FieldUtil to get config properties
+        :param method_args: Arguments passed to getter method
+        :param method_kwargs: Keyword arguments passed to getter method
         :return: Value if field is present, otherwise raise AdapterError
         :raises AdapterError: If field is not present, this indicates to library to try next adapter
         """
 
 
+# pylint: disable=too-many-public-methods
 class FieldUtil:
+    """
+    Utility class for managing field properties.
+    These properties are how the library knows how to get the field value.
+    """
+
     @classmethod
     def get_adapter_configs(cls, function: Callable[..., T]) -> Dict[Type[AdapterBase], Any]:
         """
@@ -52,7 +66,9 @@ class FieldUtil:
         setattr(function, "adapter_configs", {})
 
     @classmethod
-    def upsert_adapter_config(cls, function: Callable[..., T], adapter: Type[AdapterBase], config: Any):
+    def upsert_adapter_config(
+            cls, function: Callable[..., T], adapter: Type[AdapterBase], config: Any
+    ):
         """
         Add adapter to the function.
         """
@@ -62,6 +78,9 @@ class FieldUtil:
 
     @classmethod
     def get_adapters(cls, function: Callable[..., T]) -> Optional[List[AdapterBase]]:
+        """
+        Get adapter list from function of @config() class
+        """
         if not hasattr(function, "adapters"):
             return None
         return getattr(function, "adapters")
@@ -75,6 +94,9 @@ class FieldUtil:
 
     @classmethod
     def has_adapters(cls, function: Callable[..., T]) -> bool:
+        """
+        Check if function has adapters.
+        """
         return hasattr(function, "adapters")
 
     @classmethod
@@ -95,6 +117,9 @@ class FieldUtil:
 
     @classmethod
     def has_name(cls, function: Callable[..., T]) -> bool:
+        """
+        Check if function has name set using @field decorator.
+        """
         return hasattr(function, "name")
 
     @classmethod
@@ -108,7 +133,9 @@ class FieldUtil:
             raise ValueError("Please decorate the field with @name.") from e
 
     @classmethod
-    def add_validation_callback(cls, function: Callable[..., T], callback: Callable[..., T]) -> None:
+    def add_validation_callback(
+            cls, function: Callable[..., T], callback: Callable[..., T]
+    ) -> None:
         """
         Add validation callback to the function.
         """
@@ -181,7 +208,9 @@ class FieldUtil:
             delattr(function, "cached_response")
 
     @classmethod
-    def set_original_function(cls, wrapper_function: Callable[..., T], original_function: Callable[..., T]) -> None:
+    def set_original_function(
+            cls, wrapper_function: Callable[..., T], original_function: Callable[..., T]
+    ) -> None:
         """
         Set original function to the wrapper function.
         """

@@ -1,4 +1,7 @@
-import os
+"""
+Unit tests for the `deconfig.ini_adapter` module.
+"""
+
 from configparser import NoOptionError
 from unittest.mock import patch
 
@@ -23,11 +26,11 @@ def fixture_configparser():
         yield parser
 
 
-def test_Should_inherit_AdapterBase():
+def test_Should_inherit_adapter_base_When_checked_for_subclass():
     assert issubclass(IniAdapter, AdapterBase)
 
 
-def get_filepath_combinations():
+def _get_filepath_combinations():
     default_file_path_options = [None, ["default.ini"]]
     constructor_file_path_options = [None, ["constructor.ini"]]
     configuration_file_path_options = [None, ["configuration.ini"]]
@@ -39,7 +42,7 @@ def get_filepath_combinations():
     ]
 
 
-def get_filepath_combinations_with_constructor_override():
+def _get_filepath_combinations_with_constructor_override():
     default_file_path_options = [None, ["default.ini"]]
     constructor_file_path_options = [None, ["constructor.ini"]]
     configuration_file_path_options = [None, ["configuration.ini"]]
@@ -54,7 +57,7 @@ def get_filepath_combinations_with_constructor_override():
 
 @pytest.mark.parametrize(
     "default_file_path, constructor_file_path, configuration_file_path",
-    get_filepath_combinations()
+    _get_filepath_combinations()
 )
 def test_Should_match_expected_file_paths_When_file_paths_specified_at_different_levels(
     field_decorated_callable, configparser,
@@ -62,7 +65,9 @@ def test_Should_match_expected_file_paths_When_file_paths_specified_at_different
 ):
     IniAdapter.set_default_ini_files(default_file_path)
     adapter = IniAdapter("section_a", file_names=constructor_file_path)
-    configured_callable = IniAdapter.configure(file_paths=configuration_file_path)(field_decorated_callable)
+    configured_callable = IniAdapter.configure(
+        file_paths=configuration_file_path
+    )(field_decorated_callable)
     expected_file_paths = list(filter(None, [
         *(default_file_path or []),
         *(constructor_file_path or []),
@@ -78,15 +83,17 @@ def test_Should_match_expected_file_paths_When_file_paths_specified_at_different
 
 @pytest.mark.parametrize(
     "default_file_path, constructor_file_path, configuration_file_path",
-    get_filepath_combinations()
+    _get_filepath_combinations()
 )
-def test_Should_ignore_default_file_paths_When_constructor_override_file_is_True(
+def test_Should_ignore_default_file_paths_When_constructor_override_file_is_true(
     field_decorated_callable, configparser,
     default_file_path, constructor_file_path, configuration_file_path
 ):
     IniAdapter.set_default_ini_files(default_file_path)
     adapter = IniAdapter("section_a", file_names=constructor_file_path, override_files=True)
-    configured_callable = IniAdapter.configure(file_paths=configuration_file_path)(field_decorated_callable)
+    configured_callable = IniAdapter.configure(
+        file_paths=configuration_file_path
+    )(field_decorated_callable)
     expected_file_paths = list(filter(None, [
         *(constructor_file_path or []),
         *(configuration_file_path or [])
@@ -99,17 +106,24 @@ def test_Should_ignore_default_file_paths_When_constructor_override_file_is_True
     configparser.return_value.read.assert_called_once_with(expected_file_paths)
 
 
+# pylint: disable=too-many-arguments
 @pytest.mark.parametrize(
     "default_file_path, constructor_file_path, configuration_file_path, constructor_override",
-    get_filepath_combinations_with_constructor_override()
+    _get_filepath_combinations_with_constructor_override()
 )
 def test_Should_ignore_default_and_constructor_file_paths_When_configuration_override_is_true(
     field_decorated_callable, configparser,
     default_file_path, constructor_file_path, configuration_file_path, constructor_override
 ):
     IniAdapter.set_default_ini_files(default_file_path)
-    adapter = IniAdapter("section_a", file_names=constructor_file_path, override_files=constructor_override)
-    configured_callable = IniAdapter.configure(file_paths=configuration_file_path, override_files=True)(field_decorated_callable)
+    adapter = IniAdapter(
+        section_name="section_a",
+        file_names=constructor_file_path,
+        override_files=constructor_override
+    )
+    configured_callable = IniAdapter.configure(
+        file_paths=configuration_file_path, override_files=True
+    )(field_decorated_callable)
     expected_file_paths = list(filter(None, [*(configuration_file_path or [])]))
     if len(expected_file_paths) == 0:
         with pytest.raises(ValueError):
@@ -145,7 +159,9 @@ def test_Should_use_configuration_section_name_When_specified(
 ):
     IniAdapter.set_default_ini_files(["default.ini"])
     adapter = IniAdapter(constructor_section_name)
-    configured_callable = IniAdapter.configure(section_name=configuration_section_name)(field_decorated_callable)
+    configured_callable = IniAdapter.configure(
+        section_name=configuration_section_name
+    )(field_decorated_callable)
     expected_section_name = configuration_section_name or constructor_section_name
     if expected_section_name is None:
         with pytest.raises(ValueError):
@@ -183,7 +199,7 @@ def test_Should_use_field_and_constructor_args_When_configuration_is_not_specifi
     configparser.return_value.get.assert_called_once_with("section_a", "stub_field")
 
 
-def test_Should_raise_AdapterError_When_section_or_option_is_not_found(
+def test_Should_raise_adapter_error_When_section_or_option_is_not_found(
     field_decorated_callable, configparser
 ):
     configparser.return_value.get.side_effect = NoOptionError("option_a", "section_a")
