@@ -26,3 +26,4 @@ jobs:
         run: DEV_VERSION_SUFFIX=$(date '+%Y%m%d%H%M%S') python -m build
       - name: Publish package
         run: twine upload --repository testpypi dist/*
+
