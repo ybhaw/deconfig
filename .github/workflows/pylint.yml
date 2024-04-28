@@ -20,5 +20,3 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Analysing the code with pylint
       run: PYTHONPATH=src python -m pylint src tests
-    - name: PyLint with dynamic badge
-      uses: Silleellie/pylint-github-action@v2
