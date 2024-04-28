@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   python: circleci/python@2.1.1
+  codecov: codecov/codecov@4.1.0
 
 jobs:
   build-and-test:
@@ -89,6 +90,18 @@ jobs:
       - run:
           name: Publish package
           command: python3 -m twine upload dist/*
+  coverage:
+    docker:
+      - image: cimg/python:3.8.19
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements-dev.txt
+      - run:
+          name: Run tests
+          command: PYTHONPATH=src pytest --cov .
+      - codecov/upload
 
 workflows:
   run-tests:
