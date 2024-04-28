@@ -9,6 +9,9 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8"]
+    env:
+        TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -20,6 +23,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-build.txt
       - name: Build package
-        run: python -m build
+        run: DEV_VERSION_SUFFIX=$(date '+%Y%m%d%H%M%S') python -m build
       - name: Publish package
         run: twine upload --repository testpypi dist/*
