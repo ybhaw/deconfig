@@ -31,7 +31,7 @@ class TestEnvAdapter:
     def test_Should_be_extending_adapter_base_When_checked_for_subclass(self):
         assert issubclass(EnvAdapter, AdapterBase)
 
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel, reimported
     def test_Should_be_importable_from_deconfig_and_env_adapter_modules_When_imported(
         self,
     ):
