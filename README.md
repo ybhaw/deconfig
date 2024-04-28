@@ -161,3 +161,7 @@ deconfig. Check out the documentation for more information.
 
 - [Documentation](https://deconfig.readthedocs.io) # TODO
 - [GitHub](https://github.com/ybhaw/deconfig.git) # TODO
+
+
+## TODOs:
+- Add coverage
