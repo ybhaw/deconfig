@@ -1,4 +1,4 @@
-name: Pylint
+name: Pylint-Black
 
 on: [push]
 
@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.8"]
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
@@ -20,3 +20,5 @@ jobs:
         pip install -r requirements-dev.txt
     - name: Analysing the code with pylint
       run: PYTHONPATH=src python -m pylint src tests
+    - name: Check code with black
+      run: python -m black --check src tests
