@@ -155,7 +155,7 @@ def validate(callback: Callable[..., None]) -> Callable[..., T]:
         raise TypeError("Callback must be a callable.")
 
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
-        FieldUtil.add_validation_callback(func, callback)
+        func = FieldUtil.add_validation_callback(func, callback)
         return func
 
     return wrapper

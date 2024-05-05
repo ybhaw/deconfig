@@ -31,7 +31,7 @@ def transform(callback: Callable[[T], U]) -> Callable[..., T]:
     """
 
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
-        FieldUtil.add_transform_callback(func, callback)
+        func = FieldUtil.add_transform_callback(func, callback)
         return func
 
     return wrapper

@@ -140,7 +140,7 @@ class FieldUtil:
     @classmethod
     def add_validation_callback(
         cls, function: Callable[..., T], callback: Callable[..., T]
-    ) -> None:
+    ) -> Callable[..., T]:
         """
         Add validation callback to the function.
         """
@@ -149,6 +149,7 @@ class FieldUtil:
             validation_callbacks = getattr(function, "validation_callbacks")
         validation_callbacks.append(callback)
         setattr(function, "validation_callbacks", validation_callbacks)
+        return function
 
     @classmethod
     def get_validation_callbacks(
@@ -175,16 +176,17 @@ class FieldUtil:
 
     @classmethod
     def add_transform_callback(
-        cls, function: Callable[..., T], callback: Callable[..., T]
-    ) -> None:
+        cls, function: Callable[..., T], callback: Callable[..., U]
+    ) -> Callable[..., U]:
         """
         Add transform callback to the function.
         """
         transformer_callbacks = []
-        if hasattr(function, "transformer_callbacks"):
-            transformer_callbacks = getattr(function, "transformer_callbacks")
+        if hasattr(function, "transform_callbacks"):
+            transformer_callbacks = getattr(function, "transform_callbacks")
         transformer_callbacks.append(callback)
         setattr(function, "transform_callbacks", transformer_callbacks)
+        return function
 
     @classmethod
     def get_transform_callbacks(
