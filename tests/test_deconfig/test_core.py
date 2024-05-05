@@ -151,7 +151,10 @@ class TestValidationCallback:
         callback2 = MagicMock()
         stub_function = FieldUtil.add_validation_callback(stub_function, callback1)
         stub_function = FieldUtil.add_validation_callback(stub_function, callback2)
-        assert FieldUtil.get_validation_callbacks(stub_function) == [callback1, callback2]
+        assert FieldUtil.get_validation_callbacks(stub_function) == [
+            callback1,
+            callback2,
+        ]
 
 
 class TestOptional:
@@ -196,7 +199,10 @@ class TestTransformCallback:
         callback2 = MagicMock()
         stub_function = FieldUtil.add_transform_callback(stub_function, callback1)
         stub_function = FieldUtil.add_transform_callback(stub_function, callback2)
-        assert FieldUtil.get_transform_callbacks(stub_function) == [callback1, callback2]
+        assert FieldUtil.get_transform_callbacks(stub_function) == [
+            callback1,
+            callback2,
+        ]
 
 
 class TestCacheResponse:
