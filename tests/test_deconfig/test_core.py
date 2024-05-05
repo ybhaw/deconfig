@@ -129,20 +129,32 @@ class TestValidationCallback:
         self, stub_function
     ):
         callback = MagicMock()
-        FieldUtil.add_validation_callback(stub_function, callback)
-        assert getattr(stub_function, "validation_callback") == callback
+        stub_function = FieldUtil.add_validation_callback(stub_function, callback)
+        assert getattr(stub_function, "validation_callbacks") == [callback]
 
     def test_Should_return_validation_callback_When_get_validation_callback_is_called(
         self, stub_function
     ):
         callback = MagicMock()
-        setattr(stub_function, "validation_callback", callback)
-        assert FieldUtil.get_validation_callback(stub_function) == callback
+        setattr(stub_function, "validation_callbacks", [callback])
+        assert FieldUtil.get_validation_callbacks(stub_function) == [callback]
 
-    def test_Should_return_none_When_get_validation_callback_is_called_and_validation_callback_is_not_set(
+    def test_Should_return_empty_array_When_get_validation_callback_is_called_and_validation_callback_is_not_set(
         self, stub_function
     ):
-        assert FieldUtil.get_validation_callback(stub_function) is None
+        assert FieldUtil.get_validation_callbacks(stub_function) == []
+
+    def test_Should_return_multiple_validations_When_multiple_validations_are_added(
+        self, stub_function
+    ):
+        callback1 = MagicMock()
+        callback2 = MagicMock()
+        stub_function = FieldUtil.add_validation_callback(stub_function, callback1)
+        stub_function = FieldUtil.add_validation_callback(stub_function, callback2)
+        assert FieldUtil.get_validation_callbacks(stub_function) == [
+            callback1,
+            callback2,
+        ]
 
 
 class TestOptional:
@@ -165,20 +177,32 @@ class TestTransformCallback:
         self, stub_function
     ):
         callback = MagicMock()
-        FieldUtil.add_transform_callback(stub_function, callback)
-        assert getattr(stub_function, "transform_callback", callback)
+        stub_function = FieldUtil.add_transform_callback(stub_function, callback)
+        assert getattr(stub_function, "transform_callbacks", callback)
 
     def test_Should_return_transform_callback_When_get_transform_callback_is_called(
         self, stub_function
     ):
         callback = MagicMock()
-        setattr(stub_function, "transform_callback", callback)
-        assert FieldUtil.get_transform_callback(stub_function) == callback
+        setattr(stub_function, "transform_callbacks", callback)
+        assert FieldUtil.get_transform_callbacks(stub_function) == callback
 
-    def test_Should_return_none_When_get_transform_callback_is_called_and_transform_callback_is_not_set(
+    def test_Should_return_empty_array_When_get_transform_callback_is_called_and_transform_callback_is_not_set(
         self, stub_function
     ):
-        assert FieldUtil.get_transform_callback(stub_function) is None
+        assert FieldUtil.get_transform_callbacks(stub_function) == []
+
+    def test_Should_append_to_existing_transform_callbacks_When_multiple_decorated_with_multiple_callbacks(
+        self, stub_function
+    ):
+        callback1 = MagicMock()
+        callback2 = MagicMock()
+        stub_function = FieldUtil.add_transform_callback(stub_function, callback1)
+        stub_function = FieldUtil.add_transform_callback(stub_function, callback2)
+        assert FieldUtil.get_transform_callbacks(stub_function) == [
+            callback1,
+            callback2,
+        ]
 
 
 class TestCacheResponse:

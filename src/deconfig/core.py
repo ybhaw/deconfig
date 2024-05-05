@@ -10,6 +10,7 @@ from typing import Dict, Type
 
 
 T = TypeVar("T")
+U = TypeVar("U")
 
 
 class AdapterError(Exception):
@@ -139,20 +140,25 @@ class FieldUtil:
     @classmethod
     def add_validation_callback(
         cls, function: Callable[..., T], callback: Callable[..., T]
-    ) -> None:
+    ) -> Callable[..., T]:
         """
         Add validation callback to the function.
         """
-        setattr(function, "validation_callback", callback)
+        validation_callbacks = []
+        if hasattr(function, "validation_callbacks"):
+            validation_callbacks = getattr(function, "validation_callbacks")
+        validation_callbacks.append(callback)
+        setattr(function, "validation_callbacks", validation_callbacks)
+        return function
 
     @classmethod
-    def get_validation_callback(
+    def get_validation_callbacks(
         cls, function: Callable[..., T]
-    ) -> Optional[Callable[..., T]]:
+    ) -> List[Callable[..., None]]:
         """
         Get validation callback from the function.
         """
-        return getattr(function, "validation_callback", None)
+        return getattr(function, "validation_callbacks", [])
 
     @classmethod
     def set_optional(cls, function: Callable[..., T], is_optional: bool = True) -> None:
@@ -170,21 +176,26 @@ class FieldUtil:
 
     @classmethod
     def add_transform_callback(
-        cls, function: Callable[..., T], callback: Callable[..., T]
-    ) -> None:
+        cls, function: Callable[..., T], callback: Callable[..., U]
+    ) -> Callable[..., U]:
         """
         Add transform callback to the function.
         """
-        setattr(function, "transform_callback", callback)
+        transformer_callbacks = []
+        if hasattr(function, "transform_callbacks"):
+            transformer_callbacks = getattr(function, "transform_callbacks")
+        transformer_callbacks.append(callback)
+        setattr(function, "transform_callbacks", transformer_callbacks)
+        return function
 
     @classmethod
-    def get_transform_callback(
+    def get_transform_callbacks(
         cls, function: Callable[..., T]
-    ) -> Optional[Callable[..., T]]:
+    ) -> List[Callable[..., U]]:
         """
         Get transform callback from the function.
         """
-        return getattr(function, "transform_callback", None)
+        return getattr(function, "transform_callbacks", [])
 
     @classmethod
     def set_cached_response(cls, function: Callable[..., T], response: T) -> None:

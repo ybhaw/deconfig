@@ -49,8 +49,8 @@ def decorated_config_decorator(getter_function: Callable[..., T]) -> Callable[..
     adapters = FieldUtil.get_adapters(getter_function)
 
     optional_ = FieldUtil.is_optional(getter_function)
-    validation_callback_ = FieldUtil.get_validation_callback(getter_function)
-    transform_callback_ = FieldUtil.get_transform_callback(getter_function)
+    validation_callbacks_ = FieldUtil.get_validation_callbacks(getter_function)
+    transform_callbacks_ = FieldUtil.get_transform_callbacks(getter_function)
 
     def build_response_from_config(*args, **kwargs) -> T:
         """
@@ -73,10 +73,10 @@ def decorated_config_decorator(getter_function: Callable[..., T]) -> Callable[..
             if optional_ is False:
                 raise ValueError(f"Field {name} not found in any config.") from e
             response = getter_function(*args, **kwargs)
-        if transform_callback_ is not None:
+        for transform_callback_ in transform_callbacks_:
             response = transform_callback_(response)
-        if validation_callback_ is not None:
-            validation_callback_(response)
+        for validation_callback in validation_callbacks_:
+            validation_callback(response)
         FieldUtil.set_cached_response(getter_function, response)
         return response
 
@@ -155,7 +155,7 @@ def validate(callback: Callable[..., None]) -> Callable[..., T]:
         raise TypeError("Callback must be a callable.")
 
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
-        FieldUtil.add_validation_callback(func, callback)
+        func = FieldUtil.add_validation_callback(func, callback)
         return func
 
     return wrapper

@@ -43,7 +43,7 @@ class TestTransform:
         self, field_decorated_callable
     ):
         callable_response = ts.transform(lambda x: x)(field_decorated_callable)
-        assert hasattr(callable_response, "transform_callback")
+        assert hasattr(callable_response, "transform_callbacks")
 
 
 class TestString:
@@ -52,7 +52,7 @@ class TestString:
     ):
         callable_response = ts.string()(field_decorated_callable)
         assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callback")
+        assert hasattr(callable_response, "transform_callbacks")
 
     @pytest.mark.parametrize(
         "field_response, transformed_response",
@@ -83,7 +83,7 @@ class TestInteger:
     ):
         callable_response = ts.integer()(field_decorated_callable)
         assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callback")
+        assert hasattr(callable_response, "transform_callbacks")
 
     @pytest.mark.parametrize(
         "field_response, transformed_response",
@@ -118,7 +118,7 @@ class TestFloating:
     ):
         callable_response = ts.floating()(field_decorated_callable)
         assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callback")
+        assert hasattr(callable_response, "transform_callbacks")
 
     @pytest.mark.parametrize(
         "field_response, transformed_response",
@@ -153,7 +153,7 @@ class TestBoolean:
     ):
         callable_response = ts.boolean()(field_decorated_callable)
         assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callback")
+        assert hasattr(callable_response, "transform_callbacks")
 
     @pytest.mark.parametrize(
         "field_response, transformed_response",
@@ -192,7 +192,7 @@ class TestCommaSeparatedArrayString:
             field_decorated_callable
         )
         assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callback")
+        assert hasattr(callable_response, "transform_callbacks")
 
     @pytest.mark.parametrize(
         "field_response, transformed_response",

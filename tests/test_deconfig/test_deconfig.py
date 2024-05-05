@@ -132,8 +132,8 @@ class TestValidationCallback:
         self, stub_callable
     ):
         test_validation = validate(stub_callable)(lambda: None)
-        assert hasattr(test_validation, "validation_callback")
-        assert test_validation.validation_callback == stub_callable
+        assert hasattr(test_validation, "validation_callbacks")
+        assert test_validation.validation_callbacks == [stub_callable]
 
     def test_Should_return_same_function_When_validate_is_called(self):
         mock = MagicMock()
@@ -527,7 +527,7 @@ class TestDecoratedConfigDecorator:
         validation_callback = MagicMock()
         stub_callable.name = "test"
         stub_callable.adapters = [adapter]
-        stub_callable.validation_callback = validation_callback
+        stub_callable.validation_callbacks = [validation_callback]
         response = decorated_config_decorator(stub_callable)
         response()
         validation_callback.assert_called_once_with(1)
@@ -540,7 +540,7 @@ class TestDecoratedConfigDecorator:
         validation_callback.side_effect = ValueError("Validation error")
         stub_callable.name = "test"
         stub_callable.adapters = [adapter]
-        stub_callable.validation_callback = validation_callback
+        stub_callable.validation_callbacks = [validation_callback]
         response = decorated_config_decorator(stub_callable)
         with pytest.raises(ValueError) as e:
             response()
@@ -555,7 +555,7 @@ class TestDecoratedConfigDecorator:
         transform_callback.return_value = 2
         stub_callable.name = "test"
         stub_callable.adapters = [adapter]
-        stub_callable.transform_callback = transform_callback
+        stub_callable.transform_callbacks = [transform_callback]
         response = decorated_config_decorator(stub_callable)
         assert response() == 2
         transform_callback.assert_called_once_with(1)
@@ -568,7 +568,7 @@ class TestDecoratedConfigDecorator:
         stub_callable.name = "test"
         stub_callable.adapters = [adapter]
         transform_callback = MagicMock()
-        stub_callable.transform_callback = transform_callback
+        stub_callable.transform_callbacks = [transform_callback]
         response = decorated_config_decorator(stub_callable)
         assert response() == transform_callback.return_value
         assert response() == transform_callback.return_value
