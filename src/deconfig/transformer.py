@@ -19,7 +19,7 @@ class ExampleConfig:
 
 from typing import Callable, TypeVar, List
 
-from deconfig import FieldUtil
+from deconfig.core import FieldUtil
 
 T = TypeVar("T")
 U = TypeVar("U")
