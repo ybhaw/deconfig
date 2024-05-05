@@ -19,6 +19,8 @@ class ExampleConfig:
 
 from typing import Callable, TypeVar, List
 
+from deconfig import FieldUtil
+
 T = TypeVar("T")
 U = TypeVar("U")
 
@@ -29,7 +31,7 @@ def transform(callback: Callable[[T], U]) -> Callable[..., T]:
     """
 
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
-        func.transform_callback = callback
+        FieldUtil.add_transform_callback(func, callback)
         return func
 
     return wrapper

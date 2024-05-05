@@ -130,19 +130,19 @@ class TestValidationCallback:
     ):
         callback = MagicMock()
         FieldUtil.add_validation_callback(stub_function, callback)
-        assert getattr(stub_function, "validation_callback") == callback
+        assert getattr(stub_function, "validation_callbacks") == [callback]
 
     def test_Should_return_validation_callback_When_get_validation_callback_is_called(
         self, stub_function
     ):
         callback = MagicMock()
-        setattr(stub_function, "validation_callback", callback)
-        assert FieldUtil.get_validation_callback(stub_function) == callback
+        setattr(stub_function, "validation_callbacks", [callback])
+        assert FieldUtil.get_validation_callbacks(stub_function) == [callback]
 
-    def test_Should_return_none_When_get_validation_callback_is_called_and_validation_callback_is_not_set(
+    def test_Should_return_empty_array_When_get_validation_callback_is_called_and_validation_callback_is_not_set(
         self, stub_function
     ):
-        assert FieldUtil.get_validation_callback(stub_function) is None
+        assert FieldUtil.get_validation_callbacks(stub_function) == []
 
 
 class TestOptional:
@@ -166,19 +166,19 @@ class TestTransformCallback:
     ):
         callback = MagicMock()
         FieldUtil.add_transform_callback(stub_function, callback)
-        assert getattr(stub_function, "transform_callback", callback)
+        assert getattr(stub_function, "transform_callbacks", callback)
 
     def test_Should_return_transform_callback_When_get_transform_callback_is_called(
         self, stub_function
     ):
         callback = MagicMock()
-        setattr(stub_function, "transform_callback", callback)
-        assert FieldUtil.get_transform_callback(stub_function) == callback
+        setattr(stub_function, "transform_callbacks", callback)
+        assert FieldUtil.get_transform_callbacks(stub_function) == callback
 
-    def test_Should_return_none_When_get_transform_callback_is_called_and_transform_callback_is_not_set(
+    def test_Should_return_empty_array_When_get_transform_callback_is_called_and_transform_callback_is_not_set(
         self, stub_function
     ):
-        assert FieldUtil.get_transform_callback(stub_function) is None
+        assert FieldUtil.get_transform_callbacks(stub_function) == []
 
 
 class TestCacheResponse:
