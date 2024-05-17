@@ -2,11 +2,11 @@
 Unit tests for `deconfig` module
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
-from deconfig.core import AdapterBase, AdapterError, FieldUtil
+import deconfig
 
 # noinspection PyProtectedMember
 from deconfig import (
@@ -19,7 +19,7 @@ from deconfig import (
     set_default_adapters,
     EnvAdapter,
 )
-import deconfig
+from deconfig.core import AdapterBase, AdapterError, FieldUtil
 
 
 @pytest.mark.parametrize(
@@ -61,13 +61,14 @@ def fixture_stub_callable():
 
 # noinspection PyArgumentList,PyTypeChecker
 class TestField:
+    # pylint: disable=no-value-for-parameter
     def test_Should_raise_type_error_When_name_is_none_or_missing(self):
         with pytest.raises(TypeError) as e:
-            field()()
+            field()(lambda: None)
         assert str(e.value) == "field() missing 1 required positional argument: 'name'"
 
         with pytest.raises(TypeError) as e:
-            field(None)()
+            field(None)(lambda: None)
 
         assert str(e.value) == "Name is required."
 
@@ -77,9 +78,9 @@ class TestField:
                 raise TypeError("Not a string")
 
         with pytest.raises(TypeError):
-            field(StubNotString())()
+            field(StubNotString())(lambda: None)
 
-    def test_Should_set_attribute_name_When_field_is_called(self, stub_callable):
+    def test_Should_set_attribute_name_When_field_is_called(self):
         field_name = "stub_field_name"
 
         @field(field_name)
@@ -116,7 +117,7 @@ class TestOptional:
 
         assert FieldUtil.is_optional(stub_function) is False
 
-    def test_Should_set_true_When_optional_is_called_without_arguments(self, stub_callable):
+    def test_Should_set_true_When_optional_is_called_without_arguments(self):
         @optional()
         @field(name="stub_field")
         def stub_field():
@@ -150,7 +151,7 @@ class TestOptional:
                 raise TypeError("Not a bool")
 
         with pytest.raises(TypeError):
-            optional(StubNotBool())(field(name="stub_field")())
+            optional(StubNotBool())(field(name="stub_field")(lambda: None))
 
 
 # noinspection PyTypeChecker,PyArgumentList
@@ -174,21 +175,22 @@ class TestValidationCallback:
 
     def test_Should_raise_type_error_When_argument_is_none(self):
         with pytest.raises(TypeError):
-            validate(None)(field(name="stub_field")())
+            validate(None)(field(name="stub_field")(lambda: None))
 
+    # pylint: disable=no-value-for-parameter
     def test_Should_raise_type_error_When_argument_is_not_passed(self):
         with pytest.raises(TypeError):
-            validate()(field(name="stub_field"))
+            validate()(field(name="stub_field")(lambda: None))
 
     def test_Should_raise_type_error_When_argument_is_not_callable(self):
         with pytest.raises(TypeError):
-            validate(1)()
+            validate(1)(lambda: None)
 
 
 @pytest.fixture(name="stub_adapter")
 def fixture_stub_adapter():
     class StubAdapter(AdapterBase):
-        def get_field(self, field_name, method, *args, **kwargs):
+        def get_field(self, field_name, method, *_, **__):
             return "stub_adapter_response"
 
     return StubAdapter()
@@ -197,7 +199,9 @@ def fixture_stub_adapter():
 # noinspection PyTypeChecker
 class TestAddAdapter:
 
-    def test_Should_set_attribute_adapters_When_add_adapter_is_called(self, stub_adapter):
+    def test_Should_set_attribute_adapters_When_add_adapter_is_called(
+        self, stub_adapter
+    ):
         @add_adapter(stub_adapter)
         @field(name="test")
         def stub_field():
@@ -214,14 +218,14 @@ class TestAddAdapter:
 
     def test_Should_add_adapter_to_existing_adapters_When_add_adapter_is_called(self):
         class StubAdapter1(AdapterBase):
-            def get_field(self, field_name, method, *args, **kwargs):
+            def get_field(self, field_name, method, *_, **__):
                 return "stub_adapter_response_1"
 
         class StubAdapter2(AdapterBase):
             called_once = False
             error_raised = False
 
-            def get_field(self, field_name, method, *args, **kwargs):
+            def get_field(self, field_name, method, *_, **__):
                 if not self.called_once:
                     self.called_once = True
                     return "stub_adapter_response_2"
@@ -254,15 +258,17 @@ class TestAddAdapter:
 
     def test_Should_raise_value_error_When_argument_is_none(self):
         with pytest.raises(TypeError) as e:
-            add_adapter(None)(field(name="test")())
+            add_adapter(None)(field(name="test")(lambda: None))
 
         assert str(e.value) == "Adapter is required."
 
     def test_Should_raise_value_error_When_argument_is_not_adapter_base(self):
         with pytest.raises(TypeError) as e:
-            add_adapter(1)(field(name="test")())
+            add_adapter(1)(field(name="test")(lambda: None))
 
-        assert str(e.value) == "Adapter must extend AdapterBase or have get_field method."
+        assert (
+            str(e.value) == "Adapter must extend AdapterBase or have get_field method."
+        )
 
 
 # noinspection PyTypeChecker
@@ -295,19 +301,22 @@ class TestSetDefaultAdapters:
         with pytest.raises(TypeError) as e:
             set_default_adapters(1)
 
-        assert str(e.value) == "Adapter must extend AdapterBase or have get_field method."
+        assert (
+            str(e.value) == "Adapter must extend AdapterBase or have get_field method."
+        )
 
         with pytest.raises(TypeError) as e:
             set_default_adapters(EnvAdapter(), 1)
 
-        assert str(e.value) == "Adapter must extend AdapterBase or have get_field method."
+        assert (
+            str(e.value) == "Adapter must extend AdapterBase or have get_field method."
+        )
 
     def test_Should_set_default_adapters_to_given_adapters_When_set_default_adapters_is_called_with_adapters(
         self, stub_adapter, monkeypatch
     ):
         monkeypatch.setenv("STUB_ENV_FIELD", "stub_env_response")
         set_default_adapters(stub_adapter)
-        from deconfig import config
 
         @config()
         class StubConfig:
@@ -327,7 +336,7 @@ class TestSetDefaultAdapters:
 
 class TestConfig:
 
-    def test_Should_use_env_adapter_When_no_adapters_are_set(self, stub_adapter, monkeypatch):
+    def test_Should_use_env_adapter_When_no_adapters_are_set(self, monkeypatch):
         monkeypatch.setenv("STUB_ENV_FIELD", "stub_env_response")
         set_default_adapters(EnvAdapter())
 
@@ -356,7 +365,6 @@ class TestConfig:
         self, stub_adapter
     ):
         set_default_adapters(stub_adapter)
-        from deconfig import config
 
         @config()
         class StubConfig:
@@ -371,11 +379,10 @@ class TestConfig:
         self, stub_adapter
     ):
         class StubAdapter2(AdapterBase):
-            def get_field(self, field_name, method, *args, **kwargs):
+            def get_field(self, field_name, method, *_, **__):
                 return "stub_adapter_response_2"
 
         set_default_adapters(stub_adapter)
-        from deconfig import config
 
         @config([StubAdapter2()])
         class StubConfig:
@@ -408,13 +415,13 @@ class TestConfig:
 
     def test_Should_prioritize_methods_adapters_When_method_has_adapters(self):
         class StubAdapter1(AdapterBase):
-            def get_field(self, field_name, method, *args, **kwargs):
+            def get_field(self, field_name, method, *_, **__):
                 if field_name == "no_has_no_value":
                     raise AdapterError("Intentional error")
                 return "stub_adapter_response_1"
 
         class StubAdapter2(AdapterBase):
-            def get_field(self, field_name, method, *args, **kwargs):
+            def get_field(self, field_name, method, *_, **__):
                 if field_name == "no_has_no_value":
                     raise AdapterError("Intentional error")
                 return "stub_adapter_response_2"
@@ -441,9 +448,11 @@ class TestConfig:
         with pytest.raises(ValueError):
             stub_config.method_with_no_value()
 
-    def test_Should_use_class_adapters_When_field_missing_in_field_adapters(self, stub_adapter):
+    def test_Should_use_class_adapters_When_field_missing_in_field_adapters(
+        self, stub_adapter
+    ):
         class StubAdapter2(AdapterBase):
-            def get_field(self, field_name, method, *args, **kwargs):
+            def get_field(self, field_name, method, *_, **__):
                 if field_name == "field_present_in_adapter_2":
                     return "stub_adapter_response_2"
                 raise AdapterError("Intentional error")
@@ -482,7 +491,7 @@ class TestConfig:
         assert FieldUtil.has_original_function(stub_config.field_stub)
 
     def test_Should_add_reset_deconfig_cache_method_When_class_is_decorated_with_config(
-        self, stub_adapter
+        self,
     ):
         @config()
         class StubConfig:
@@ -533,10 +542,10 @@ class TestDecoratedConfigDecorator:
         assert stub_config.stub_field() == "config_not_called"
 
     def test_Should_mandate_field_be_present_in_config_false_When_optional_is_not_set_or_is_false(
-        self, stub_callable, stub_adapter
+        self,
     ):
         class StubAdapter2(AdapterBase):
-            def get_field(self, field_name, method, *args, **kwargs):
+            def get_field(self, field_name, method, *_, **__):
                 raise AdapterError("Intentional error")
 
         @config(adapters=[StubAdapter2()])
@@ -550,11 +559,9 @@ class TestDecoratedConfigDecorator:
             stub_config.stub_field()
         assert str(e.value) == "Field test not found in any config."
 
-    def test_Should_set_optional_to_true_When_optional_is_set_to_true(
-        self, stub_callable
-    ):
+    def test_Should_set_optional_to_true_When_optional_is_set_to_true(self):
         class StubAdapter2(AdapterBase):
-            def get_field(self, field_name, method, *args, **kwargs):
+            def get_field(self, field_name, method, *_, **__):
                 raise AdapterError("Intentional error")
 
         @config(adapters=[StubAdapter2()])

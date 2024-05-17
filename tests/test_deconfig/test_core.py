@@ -1,6 +1,7 @@
 """
 Unit tests for the `deconfig.core` module
 """
+
 from typing import Type
 from unittest.mock import MagicMock
 
@@ -31,9 +32,7 @@ class TestAdapterConfig:
         FieldUtil.initialize_adapter_configs(stub_function)
         config = MagicMock()
         FieldUtil.upsert_adapter_config(stub_function, AdapterBase, config)
-        assert FieldUtil.get_adapter_configs(stub_function) == {
-            AdapterBase: config
-        }
+        assert FieldUtil.get_adapter_configs(stub_function) == {AdapterBase: config}
 
     def test_Should_raise_error_When_get_adapter_configs_is_called_and_adapter_configs_is_not_set(
         self, stub_function
