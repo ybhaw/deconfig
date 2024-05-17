@@ -63,15 +63,11 @@ def fixture_stub_callable():
 class TestField:
     def test_Should_raise_type_error_When_name_is_none_or_missing(self):
         with pytest.raises(TypeError) as e:
-            @field()
-            def stub_field():
-                """pass"""
+            field()()
         assert str(e.value) == "field() missing 1 required positional argument: 'name'"
 
         with pytest.raises(TypeError) as e:
-            @field(None)
-            def stub_field():
-                """pass"""
+            field(None)()
 
         assert str(e.value) == "Name is required."
 
@@ -81,9 +77,7 @@ class TestField:
                 raise TypeError("Not a string")
 
         with pytest.raises(TypeError):
-            @field(StubNotString())
-            def stub_field():
-                """pass"""
+            field(StubNotString())()
 
     def test_Should_set_attribute_name_When_field_is_called(self, stub_callable):
         field_name = "stub_field_name"
@@ -156,10 +150,7 @@ class TestOptional:
                 raise TypeError("Not a bool")
 
         with pytest.raises(TypeError):
-            @optional(StubNotBool())
-            @field(name="stub_field")
-            def stub_field():
-                """pass"""
+            optional(StubNotBool())(field(name="stub_field")())
 
 
 # noinspection PyTypeChecker,PyArgumentList
@@ -183,21 +174,15 @@ class TestValidationCallback:
 
     def test_Should_raise_type_error_When_argument_is_none(self):
         with pytest.raises(TypeError):
-            @validate(None)
-            @field(name="stub_field")
-            def stub_field():
-                """pass"""
+            validate(None)(field(name="stub_field")())
 
     def test_Should_raise_type_error_When_argument_is_not_passed(self):
         with pytest.raises(TypeError):
-            @validate()
-            @field(name="stub_field")
-            def stub_field():
-                """pass"""
+            validate()(field(name="stub_field"))
 
     def test_Should_raise_type_error_When_argument_is_not_callable(self):
         with pytest.raises(TypeError):
-            validate(1)(lambda: None)
+            validate(1)()
 
 
 @pytest.fixture(name="stub_adapter")
@@ -234,6 +219,7 @@ class TestAddAdapter:
 
         class StubAdapter2(AdapterBase):
             called_once = False
+            error_raised = False
 
             def get_field(self, field_name, method, *args, **kwargs):
                 if not self.called_once:
@@ -241,9 +227,11 @@ class TestAddAdapter:
                     return "stub_adapter_response_2"
                 raise AdapterError("Intentional error")
 
+        stub_adapter_2 = StubAdapter2()
+
         @config()
         class StubConfig:
-            @add_adapter(StubAdapter2())
+            @add_adapter(stub_adapter_2)
             @add_adapter(StubAdapter1())
             @field(name="test")
             def stub_field(self):
@@ -253,6 +241,8 @@ class TestAddAdapter:
         assert stub_config.stub_field() == "stub_adapter_response_2"
         stub_config.reset_deconfig_cache()
         assert stub_config.stub_field() == "stub_adapter_response_1"
+        with pytest.raises(AdapterError):
+            stub_adapter_2.get_field("test", stub_config.stub_field)
 
     def test_Should_add_adapter_as_new_list_When_add_adapter_is_called(
         self, stub_callable, stub_adapter
@@ -264,19 +254,13 @@ class TestAddAdapter:
 
     def test_Should_raise_value_error_When_argument_is_none(self):
         with pytest.raises(TypeError) as e:
-            @add_adapter(None)
-            @field(name="test")
-            def stub_field():
-                """Stub field"""
+            add_adapter(None)(field(name="test")())
 
         assert str(e.value) == "Adapter is required."
 
     def test_Should_raise_value_error_When_argument_is_not_adapter_base(self):
         with pytest.raises(TypeError) as e:
-            @add_adapter(1)
-            @field(name="test")
-            def stub_field():
-                """Stub field"""
+            add_adapter(1)(field(name="test")())
 
         assert str(e.value) == "Adapter must extend AdapterBase or have get_field method."
 
@@ -422,14 +406,20 @@ class TestConfig:
         assert stub_config.stub_method_with_field_decorator() == "stub_adapter_response"
         assert stub_config.stub_method_without_field_decorator() == 1
 
-    def test_Should_prioritize_methods_adapters_When_method_has_adapters(self, stub_adapter):
+    def test_Should_prioritize_methods_adapters_When_method_has_adapters(self):
+        class StubAdapter1(AdapterBase):
+            def get_field(self, field_name, method, *args, **kwargs):
+                if field_name == "no_has_no_value":
+                    raise AdapterError("Intentional error")
+                return "stub_adapter_response_1"
+
         class StubAdapter2(AdapterBase):
             def get_field(self, field_name, method, *args, **kwargs):
-                if field_name == "stub_adapter_2_has_no_value":
+                if field_name == "no_has_no_value":
                     raise AdapterError("Intentional error")
                 return "stub_adapter_response_2"
 
-        @config(adapters=[stub_adapter])
+        @config(adapters=[StubAdapter1()])
         class StubConfig:
             @add_adapter(StubAdapter2())
             @field(name="test")
@@ -440,9 +430,16 @@ class TestConfig:
             def method_without_field_decorator(self):
                 """Field without adapter"""
 
+            @add_adapter(StubAdapter2())
+            @field(name="no_has_no_value")
+            def method_with_no_value(self):
+                """Field with adapter"""
+
         stub_config = StubConfig()
         assert stub_config.method_with_field_adapter() == "stub_adapter_response_2"
-        assert stub_config.method_without_field_decorator() == "stub_adapter_response"
+        assert stub_config.method_without_field_decorator() == "stub_adapter_response_1"
+        with pytest.raises(ValueError):
+            stub_config.method_with_no_value()
 
     def test_Should_use_class_adapters_When_field_missing_in_field_adapters(self, stub_adapter):
         class StubAdapter2(AdapterBase):
