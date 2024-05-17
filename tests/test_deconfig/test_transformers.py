@@ -1,261 +1,203 @@
 """
-Unit tests for `deconfig.transformer` module.
+Test cases for deconfig.transformer module.
 """
 
+from unittest.mock import MagicMock
+
 import pytest
-from deconfig import field, config, optional, EnvAdapter, set_default_adapters
-import deconfig.transformer as ts
 
-
-@pytest.fixture(name="field_decorated_callable")
-def fixture_field_decorated_callable():
-
-    @field(name="stub_field")
-    def callable_stub():
-        """Stub callable"""
-
-    return callable_stub
-
-
-def _get_config_with_decorator(decorator, field_response):
-    set_default_adapters(EnvAdapter())
-
-    @config()
-    class StubConfig:
-        @decorator
-        @optional()
-        @field(name="stub_field")
-        def stub_field(self):
-            return field_response
-
-    return StubConfig()
+from deconfig.transformer import (
+    transform,
+    cast_datatype,
+    string,
+    integer,
+    boolean,
+    floating,
+    comma_separated_array_string,
+)
 
 
 class TestTransform:
-
-    def test_Should_return_same_function_When_decorated_with_transform(
-        self, field_decorated_callable
-    ):
-        callable_response = ts.transform(lambda x: x)(field_decorated_callable)
-        assert callable_response == field_decorated_callable
-
-    def test_Should_add_transform_attribute_When_decorated_with_transform(
-        self, field_decorated_callable
-    ):
-        callable_response = ts.transform(lambda x: x)(field_decorated_callable)
-        assert hasattr(callable_response, "transform_callbacks")
-
-
-class TestString:
-    def test_Should_return_same_function_When_decorated_with_transformer_callable(
-        self, field_decorated_callable
-    ):
-        callable_response = ts.string()(field_decorated_callable)
-        assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callbacks")
-
-    @pytest.mark.parametrize(
-        "field_response, transformed_response",
-        [
-            (None, None),
-            ("", ""),
-            ("test", "test"),
-            (1, "1"),
-            (1.0, "1.0"),
-            (True, "True"),
-            (False, "False"),
-        ],
-    )
-    def test_Should_return_transformed_response_When_decorated_and_cast_null_is_false(
-        self, field_response, transformed_response
-    ):
-        config_instance = _get_config_with_decorator(ts.string(), field_response)
-        assert config_instance.stub_field() == transformed_response
-
-    def test_Should_cast_null_to_string_When_decorated_and_cast_null_is_true(self):
-        config_instance = _get_config_with_decorator(ts.string(cast_null=True), None)
-        assert config_instance.stub_field() == "None"
-
-
-class TestInteger:
-    def test_Should_return_same_function_When_decorated_with_transformer_callable(
-        self, field_decorated_callable
-    ):
-        callable_response = ts.integer()(field_decorated_callable)
-        assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callbacks")
-
-    @pytest.mark.parametrize(
-        "field_response, transformed_response",
-        [(None, None), (1, 1), (1.0, 1), (True, 1), (False, 0)],
-    )
-    def test_Should_return_transformed_response_When_decorated_and_cast_null_is_false(
-        self, field_response, transformed_response
-    ):
-        config_instance = _get_config_with_decorator(ts.integer(), field_response)
-        assert config_instance.stub_field() == transformed_response
-
-    def test_Should_raise_value_error_When_cannot_cast_to_int(self):
-        config_instance = _get_config_with_decorator(ts.integer(), "test")
-        with pytest.raises(ValueError):
-            config_instance.stub_field()
-
-    def test_Should_return_none_When_cast_null_is_default_or_false(self):
-        config_instance = _get_config_with_decorator(ts.integer(), None)
-        assert config_instance.stub_field() is None
-        config_instance = _get_config_with_decorator(ts.integer(cast_null=False), None)
-        assert config_instance.stub_field() is None
-
-    def test_Should_raise_value_error_When_cast_null_is_true(self):
-        config_instance = _get_config_with_decorator(ts.integer(cast_null=True), None)
-        with pytest.raises(TypeError):
-            config_instance.stub_field()
-
-
-class TestFloating:
-    def test_Should_return_same_function_When_decorated_with_transformer_callable(
-        self, field_decorated_callable
-    ):
-        callable_response = ts.floating()(field_decorated_callable)
-        assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callbacks")
-
-    @pytest.mark.parametrize(
-        "field_response, transformed_response",
-        [(None, None), (1, 1.0), (1.0, 1.0), (True, 1.0), (False, 0.0)],
-    )
-    def test_Should_return_transformed_response_When_decorated_and_cast_null_is_false(
-        self, field_response, transformed_response
-    ):
-        config_instance = _get_config_with_decorator(ts.floating(), field_response)
-        assert config_instance.stub_field() == transformed_response
-
-    def test_Should_raise_value_error_When_cannot_cast_to_float(self):
-        config_instance = _get_config_with_decorator(ts.floating(), "test")
-        with pytest.raises(ValueError):
-            config_instance.stub_field()
-
-    def test_Should_return_none_When_cast_null_is_default_or_false(self):
-        config_instance = _get_config_with_decorator(ts.floating(), None)
-        assert config_instance.stub_field() is None
-        config_instance = _get_config_with_decorator(ts.floating(cast_null=False), None)
-        assert config_instance.stub_field() is None
-
-    def test_Should_raise_value_error_When_cast_null_is_true(self):
-        config_instance = _get_config_with_decorator(ts.floating(cast_null=True), None)
-        with pytest.raises(TypeError):
-            config_instance.stub_field()
-
-
-class TestBoolean:
-    def test_Should_return_same_function_When_decorated_with_transformer_callable(
-        self, field_decorated_callable
-    ):
-        callable_response = ts.boolean()(field_decorated_callable)
-        assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callbacks")
-
-    @pytest.mark.parametrize(
-        "field_response, transformed_response",
-        [
-            (None, None),
-            (1, True),
-            (1.0, True),
-            (True, True),
-            (False, False),
-            (0, False),
-            (0.0, False),
-            ("test", True),
-            ("false", True),
-            ("False", True),
-            ("", False),
-        ],
-    )
-    def test_Should_return_transformed_response_When_decorated_and_cast_null_is_false(
-        self, field_response, transformed_response
-    ):
-        config_instance = _get_config_with_decorator(ts.boolean(), field_response)
-        assert config_instance.stub_field() == transformed_response
-
-    def test_Should_return_none_When_cast_null_is_default_or_false(self):
-        config_instance = _get_config_with_decorator(ts.boolean(), None)
-        assert config_instance.stub_field() is None
-        config_instance = _get_config_with_decorator(ts.boolean(cast_null=False), None)
-        assert config_instance.stub_field() is None
-
-
-class TestCommaSeparatedArrayString:
-    def test_Should_return_same_function_When_decorated_with_transformer_callable(
-        self, field_decorated_callable
-    ):
-        callable_response = ts.comma_separated_array_string(str)(
-            field_decorated_callable
-        )
-        assert callable_response == field_decorated_callable
-        assert hasattr(callable_response, "transform_callbacks")
-
-    @pytest.mark.parametrize(
-        "field_response, transformed_response",
-        [
-            (None, []),
-            ("", [""]),
-            ("test", ["test"]),
-            ("1,2,3", ["1", "2", "3"]),
-            (1, ["1"]),
-            (1.0, ["1.0"]),
-            (True, ["True"]),
-            (False, ["False"]),
-            ("1.1,2.2,2\\,3", ["1.1", "2.2", "2\\", "3"]),
-            (b"1,2,3", ["1", "2", "3"]),
-        ],
-    )
-    def test_Should_return_transformed_response_When_decorated_and_cast_null_is_false(
-        self, field_response, transformed_response
-    ):
-        config_instance = _get_config_with_decorator(
-            ts.comma_separated_array_string(str), field_response
-        )
-        assert config_instance.stub_field() == transformed_response
-
-    def test_Should_return_none_When_cast_null_is_default_or_false(self):
-        config_instance = _get_config_with_decorator(
-            ts.comma_separated_array_string(str), None
-        )
-        assert config_instance.stub_field() == []
-        config_instance = _get_config_with_decorator(
-            ts.comma_separated_array_string(str, cast_null=False), None
-        )
-        assert config_instance.stub_field() == []
-
-    def test_Should_raise_value_error_When_cannot_cast_to_callable_in_list(self):
-        config_instance = _get_config_with_decorator(
-            ts.comma_separated_array_string(int), "hello"
-        )
-        with pytest.raises(ValueError):
-            config_instance.stub_field()
-
-    def test_Should_cast_returned_value_to_string_before_splitting_When_returned_value_is_not_string(
+    def test_Should_return_the_response_of_transformer_When_decorated_with_transformer(
         self,
     ):
-        config_instance = _get_config_with_decorator(
-            ts.comma_separated_array_string(int), 1
-        )
-        assert config_instance.stub_field() == [1]
+        transformer_stub = MagicMock()
+        response = MagicMock()
 
-    @pytest.mark.parametrize(
-        "cast_callback, field_response, transformed_response",
-        [
-            (str, "1,2,3", ["1", "2", "3"]),
-            (int, "1,2,3", [1, 2, 3]),
-            (bool, "1,,1", [True, False, True]),
-            (float, "1.1,2.2,3.3", [1.1, 2.2, 3.3]),
-            (lambda x: x != "0", "1,0,1", [True, False, True]),
-        ],
-    )
-    def test_Should_cast_to_cast_callback_When_returned_values_can_be_casted(
-        self, cast_callback, field_response, transformed_response
-    ):
-        config_instance = _get_config_with_decorator(
-            ts.comma_separated_array_string(cast_callback), field_response
+        @transform(transformer_stub)
+        def stub_function():
+            return response
+
+        assert stub_function() == transformer_stub.return_value
+        transformer_stub.assert_called_once_with(response)
+
+    # noinspection PyArgumentList,PyTypeChecker
+    def test_Should_raise_type_error_When_transformer_is_missing(self):
+        with pytest.raises(TypeError) as e:
+            transform(None)(lambda: None)
+        assert str(e.value) == "Callback is required."
+
+        with pytest.raises(TypeError) as e:
+            transform()(lambda: None)  # pylint: disable=no-value-for-parameter
+        assert (
+            str(e.value)
+            == "transform() missing 1 required positional argument: 'callback'"
         )
-        assert config_instance.stub_field() == transformed_response
+
+    # noinspection PyTypeChecker
+    def test_Should_raise_type_error_When_transformer_is_not_callable(self):
+        with pytest.raises(TypeError) as e:
+            transform(1)(lambda: None)
+        assert str(e.value) == "Callback must be a callable."
+
+
+@pytest.mark.parametrize(
+    "datatype, response, expected_response, cast_null",
+    [
+        (int, 1, 1, False),
+        (int, "1", 1, False),
+        (str, 1, "1", False),
+        (str, "foo", "foo", False),
+        (bool, 1, True, False),
+        (bool, "true", True, False),
+        (bool, "false", True, False),
+        (str, None, None, False),
+        (str, None, "None", True),
+    ],
+)
+def test_Should_cast_response_to_datatype_When_decorated_with_cast_datatype(
+    datatype, response, expected_response, cast_null
+):
+    @cast_datatype(datatype, cast_null)
+    def stub_function():
+        return response
+
+    assert stub_function() == expected_response
+
+
+@pytest.mark.parametrize(
+    "decorator, response, cast_null, expected_response",
+    [
+        (string, "foo", False, "foo"),
+        (string, 1, False, "1"),
+        (string, None, True, "None"),
+        (string, None, False, None),
+    ],
+)
+def test_Should_cast_response_to_string_When_decorated_with_string(
+    decorator, response, cast_null, expected_response
+):
+    @decorator(cast_null)
+    def stub_function():
+        return response
+
+    assert stub_function() == expected_response
+
+
+@pytest.mark.parametrize(
+    "decorator, response, expected_response",
+    [
+        (integer, "1", 1),
+        (integer, 1, 1),
+        (integer, None, None),
+        (integer, 1.0, 1),
+        (integer, True, 1),
+    ],
+)
+def test_Should_cast_response_to_integer_When_decorated_with_integer(
+    decorator, response, expected_response
+):
+    @decorator()
+    def stub_function():
+        return response
+
+    assert stub_function() == expected_response
+
+
+@pytest.mark.parametrize(
+    "decorator, response, cast_null, expected_response",
+    [
+        (boolean, "true", False, True),
+        (boolean, "false", False, True),
+        (boolean, 1, False, True),
+        (boolean, 0, False, False),
+        (boolean, None, True, False),
+        (boolean, None, False, None),
+    ],
+)
+def test_Should_cast_response_to_boolean_When_decorated_with_boolean(
+    decorator, response, cast_null, expected_response
+):
+    @decorator(cast_null)
+    def stub_function():
+        return response
+
+    assert stub_function() == expected_response
+
+
+@pytest.mark.parametrize(
+    "decorator, response, expected_response",
+    [
+        (floating, "1.0", 1.0),
+        (floating, 1, 1.0),
+        (floating, None, None),
+        (floating, "1e5", 100000.0),
+        (floating, True, 1.0),
+    ],
+)
+def test_Should_cast_response_to_float_When_decorated_with_floating(
+    decorator, response, expected_response
+):
+    @decorator()
+    def stub_function():
+        return response
+
+    assert stub_function() == expected_response
+
+
+@pytest.mark.parametrize(
+    "response, datatype, cast_null, expected_value",
+    [
+        ("foo", str, False, ["foo"]),
+        ("foo,bar", str, False, ["foo", "bar"]),
+        ("1,2", int, False, [1, 2]),
+        ("1,2", str, False, ["1", "2"]),
+        ("1,2", float, False, [1.0, 2.0]),
+        ("", str, False, [""]),
+        (None, str, True, ["None"]),
+        (None, str, False, []),
+        (b"foo,bar", str, False, ["foo", "bar"]),
+    ],
+)
+def test_Should_cast_response_to_comma_separated_array_string_When_decorated_with_comma_separated_array_string(
+    response, datatype, cast_null, expected_value
+):
+    @comma_separated_array_string(datatype, cast_null)
+    def stub_function():
+        return response
+
+    assert stub_function() == expected_value
+
+
+@pytest.mark.parametrize(
+    "import_name",
+    [
+        "transform",
+        "cast_datatype",
+        "string",
+        "integer",
+        "boolean",
+        "floating",
+        "comma_separated_array_string",
+        "__version__",
+        "__license__",
+        "__author__",
+        "__description__",
+    ],
+)
+def test_Should_import_transformers_When_imported_from_deconfig_transformer(
+    import_name,
+):
+    import deconfig.transformer as module  # pylint: disable=import-outside-toplevel
+
+    assert hasattr(module, import_name)

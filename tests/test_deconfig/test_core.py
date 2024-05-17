@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from deconfig.core import FieldUtil, AdapterBase
+from deconfig.core import FieldUtil, AdapterBase, is_callable
 
 
 @pytest.fixture(name="stub_function")
@@ -15,6 +15,29 @@ def fixture_stub_function():
         """Stub Function"""
 
     return stub_function
+
+
+class TestIsCallable:
+    def test_Should_not_raise_error_When_is_callable_is_called_with_callable(self):
+        is_callable(lambda: None)
+
+    def test_Should_raise_type_error_When_is_callable_is_called_with_non_callable(self):
+        with pytest.raises(TypeError) as e:
+            is_callable(1)
+        assert str(e.value) == "Callback must be a callable."
+
+    # noinspection PyArgumentList,PyTypeChecker
+    def test_Should_raise_type_error_When_callable_is_missing(self):
+        with pytest.raises(TypeError) as e:
+            is_callable(None)
+        assert str(e.value) == "Callback is required."
+
+        with pytest.raises(TypeError) as e:
+            is_callable()  # pylint: disable=no-value-for-parameter
+        assert (
+            str(e.value)
+            == "is_callable() missing 1 required positional argument: 'callback'"
+        )
 
 
 class TestAdapterConfig:
