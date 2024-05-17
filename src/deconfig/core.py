@@ -13,6 +13,17 @@ T = TypeVar("T")
 U = TypeVar("U")
 
 
+def is_callable(callback: Callable[..., T]) -> bool:
+    """
+    Check if function is callable.
+    """
+    if not callback:
+        raise TypeError("Callback is required.")
+    if not callable(callback):
+        raise TypeError("Callback must be a callable.")
+    return True
+
+
 class AdapterError(Exception):
     """
     Raised when adapter fails to get field value.

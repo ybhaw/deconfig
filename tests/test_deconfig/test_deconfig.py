@@ -14,7 +14,6 @@ from deconfig import (
     config,
     field,
     optional,
-    validate,
     add_adapter,
     set_default_adapters,
     EnvAdapter,
@@ -27,22 +26,18 @@ from deconfig.core import AdapterBase, AdapterError, FieldUtil
     [
         "field",
         "optional",
-        "validate",
         "add_adapter",
         "set_default_adapters",
         "config",
-        "transform",
         "EnvAdapter",
         "IniAdapter",
     ],
     ids=[
         "field",
         "optional",
-        "validate",
         "add_adapter",
         "set_default_adapters",
         "config",
-        "transform",
         "EnvAdapter",
         "IniAdapter",
     ],
@@ -152,39 +147,6 @@ class TestOptional:
 
         with pytest.raises(TypeError):
             optional(StubNotBool())(field(name="stub_field")(lambda: None))
-
-
-# noinspection PyTypeChecker,PyArgumentList
-class TestValidationCallback:
-
-    def test_Should_set_attribute_validation_callback_When_validate_is_called(self):
-        def stub_validation():
-            """pass"""
-
-        @validate(stub_validation)
-        @field(name="stub_field")
-        def stub_field():
-            """Stub field"""
-
-        assert FieldUtil.get_validation_callbacks(stub_field) == [stub_validation]
-
-    def test_Should_return_same_function_When_validate_is_called(self):
-        mock = MagicMock()
-        response_callback = validate(mock)(mock)
-        assert response_callback == mock
-
-    def test_Should_raise_type_error_When_argument_is_none(self):
-        with pytest.raises(TypeError):
-            validate(None)(field(name="stub_field")(lambda: None))
-
-    # pylint: disable=no-value-for-parameter
-    def test_Should_raise_type_error_When_argument_is_not_passed(self):
-        with pytest.raises(TypeError):
-            validate()(field(name="stub_field")(lambda: None))
-
-    def test_Should_raise_type_error_When_argument_is_not_callable(self):
-        with pytest.raises(TypeError):
-            validate(1)(lambda: None)
 
 
 @pytest.fixture(name="stub_adapter")
@@ -573,60 +535,6 @@ class TestDecoratedConfigDecorator:
 
         stub_config = StubConfig()
         assert stub_config.stub_field() is None
-
-    def test_Should_call_validation_callback_When_set(self, stub_callable):
-        adapter = MagicMock()
-        adapter.get_field.return_value = 1
-
-        validation_callback = MagicMock()
-        stub_callable.name = "test"
-        stub_callable.adapters = [adapter]
-        stub_callable.validation_callbacks = [validation_callback]
-        response = _decorated_config_decorator(stub_callable)
-        response()
-        validation_callback.assert_called_once_with(1)
-
-    def test_Should_raise_value_error_When_validation_callback_raises_error(
-        self, stub_callable
-    ):
-        adapter = MagicMock()
-        validation_callback = MagicMock()
-        validation_callback.side_effect = ValueError("Validation error")
-        stub_callable.name = "test"
-        stub_callable.adapters = [adapter]
-        stub_callable.validation_callbacks = [validation_callback]
-        response = _decorated_config_decorator(stub_callable)
-        with pytest.raises(ValueError) as e:
-            response()
-        validation_callback.assert_called_once_with(adapter.get_field.return_value)
-        assert str(e.value) == "Validation error"
-
-    def test_Should_call_transform_callback_When_set(self, stub_callable):
-        adapter = MagicMock()
-        adapter.get_field.return_value = 1
-
-        transform_callback = MagicMock()
-        transform_callback.return_value = 2
-        stub_callable.name = "test"
-        stub_callable.adapters = [adapter]
-        stub_callable.transform_callbacks = [transform_callback]
-        response = _decorated_config_decorator(stub_callable)
-        assert response() == 2
-        transform_callback.assert_called_once_with(1)
-
-    def test_Should_cache_transformed_response_When_invoked_and_has_transformer(
-        self, stub_callable
-    ):
-        adapter = MagicMock()
-        adapter.get_field.side_effect = [1]
-        stub_callable.name = "test"
-        stub_callable.adapters = [adapter]
-        transform_callback = MagicMock()
-        stub_callable.transform_callbacks = [transform_callback]
-        response = _decorated_config_decorator(stub_callable)
-        assert response() == transform_callback.return_value
-        assert response() == transform_callback.return_value
-        assert transform_callback.call_count == 1
 
     def test_Should_cache_response_When_invoked(self, stub_callable):
         adapter = MagicMock()

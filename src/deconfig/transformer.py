@@ -18,8 +18,11 @@ class ExampleConfig:
 """
 
 from typing import Callable, TypeVar, List
+from deconfig.__version__ import __version__, __author__, __license__
 
-from deconfig.core import FieldUtil
+__description__ = "A simple transformation library for Python."
+
+from deconfig.core import is_callable
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -29,15 +32,20 @@ def transform(callback: Callable[[T], U]) -> Callable[..., T]:
     """
     Adds a transform callback to be used when deriving configuration value.
     """
+    is_callable(callback)
 
     def wrapper(func: Callable[..., T]) -> Callable[..., T]:
-        func = FieldUtil.add_transform_callback(func, callback)
-        return func
+        def transform_and_call(*args, **kwargs):
+            response = func(*args, **kwargs)
+            return callback(response)
+
+        transform_and_call: func = transform_and_call
+        return transform_and_call
 
     return wrapper
 
 
-def cast_custom(
+def cast_datatype(
     callback: Callable[[T], T], cast_null: bool = False
 ) -> Callable[[U], Callable[..., U]]:
     """
@@ -85,15 +93,12 @@ def string(cast_null: bool = False) -> Callable[..., Callable[..., str]]:
         * 1 -> "1"
         * None -> None
     """
-    return cast_custom(str, cast_null)
+    return cast_datatype(str, cast_null)
 
 
-def integer(cast_null: bool = False) -> Callable[..., Callable[..., int]]:
+def integer() -> Callable[..., Callable[..., int]]:
     """
     Casts response to integer.
-
-    Parameters:
-        cast_null: If True and if response is None, None will be returned.
 
     Raises:
         ValueError: If response is not a valid integer.
@@ -113,15 +118,12 @@ def integer(cast_null: bool = False) -> Callable[..., Callable[..., int]]:
         * "hello" -> Raises ValueError
         * None -> None
     """
-    return cast_custom(int, cast_null)
+    return cast_datatype(int)
 
 
-def floating(cast_null: bool = False) -> Callable[..., Callable[..., float]]:
+def floating() -> Callable[..., Callable[..., float]]:
     """
     Casts response to float.
-
-    Parameters:
-        cast_null: If True and if response is None, None will be returned.
 
     Raises:
         ValueError: If response is not a valid float.
@@ -141,7 +143,7 @@ def floating(cast_null: bool = False) -> Callable[..., Callable[..., float]]:
         * "hello" -> Raises ValueError
         * None -> None
     """
-    return cast_custom(float, cast_null)
+    return cast_datatype(float)
 
 
 def boolean(cast_null: bool = False) -> Callable[..., Callable[..., bool]]:
@@ -171,7 +173,7 @@ def boolean(cast_null: bool = False) -> Callable[..., Callable[..., bool]]:
         * [1] -> True
         * None -> None
     """
-    return cast_custom(bool, cast_null)
+    return cast_datatype(bool, cast_null)
 
 
 def comma_separated_array_string(
@@ -213,4 +215,9 @@ __all__ = [
     "floating",
     "boolean",
     "comma_separated_array_string",
+    "cast_datatype",
+    "__version__",
+    "__author__",
+    "__license__",
+    "__description__",
 ]
