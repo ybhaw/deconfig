@@ -2,7 +2,7 @@
 Unit tests for `deconfig` module
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -342,8 +342,10 @@ class TestSetDefaultAdapters:
 
 
 class TestConfig:
+
     def test_Should_use_env_adapter_When_no_adapters_are_set(self, stub_adapter, monkeypatch):
         monkeypatch.setenv("STUB_ENV_FIELD", "stub_env_response")
+        set_default_adapters(EnvAdapter())
 
         @config()
         class StubConfig:
