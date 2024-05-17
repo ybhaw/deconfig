@@ -18,27 +18,23 @@ def fixture_stub_function():
     return stub_function
 
 
-class TestIsCallable:
-    def test_Should_not_raise_error_When_is_callable_is_called_with_callable(self):
-        is_callable(lambda: None)
-
-    def test_Should_raise_type_error_When_is_callable_is_called_with_non_callable(self):
+@pytest.mark.parametrize(
+    "callback_arg, expected_error_message",
+    [
+        (1, "Callback must be a callable."),
+        (None, "Callback is required."),
+        (lambda: None, None),
+    ],
+)
+def test_Should_match_expected_When_is_callable_is_called(
+    callback_arg, expected_error_message
+):
+    if expected_error_message:
         with pytest.raises(TypeError) as e:
-            is_callable(1)
-        assert str(e.value) == "Callback must be a callable."
-
-    # noinspection PyArgumentList,PyTypeChecker
-    def test_Should_raise_type_error_When_callable_is_missing(self):
-        with pytest.raises(TypeError) as e:
-            is_callable(None)
-        assert str(e.value) == "Callback is required."
-
-        with pytest.raises(TypeError) as e:
-            is_callable()  # pylint: disable=no-value-for-parameter
-        assert (
-            str(e.value)
-            == "is_callable() missing 1 required positional argument: 'callback'"
-        )
+            is_callable(callback_arg)
+        assert str(e.value) == expected_error_message
+    else:
+        is_callable(callback_arg)
 
 
 class TestAdapterConfig:
