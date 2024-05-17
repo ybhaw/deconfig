@@ -24,9 +24,11 @@ def fixture_stub_function():
         (1, "Callback must be a callable."),
         (None, "Callback is required."),
         (lambda: None, None),
-    ]
+    ],
 )
-def test_is_callable(callback_arg, expected_error_message):
+def test_Should_match_expected_When_is_callable_is_called(
+    callback_arg, expected_error_message
+):
     if expected_error_message:
         with pytest.raises(TypeError) as e:
             is_callable(callback_arg)
