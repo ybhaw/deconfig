@@ -67,9 +67,9 @@ def _decorated_config_decorator(getter_function: Callable[..., T]) -> Callable[.
     return decorated_config_wrapper
 
 
-def _reset_deconfig_cache(obj: T) -> T:
+def reset_cache(obj: Type[AdapterBase]):
     """
-    Decorator values are cached. This method will reset cache for all fields.
+    Reset cache for all fields in the class.
     """
     for name in dir(obj):
         getter_function = getattr(obj, name)
@@ -80,7 +80,6 @@ def _reset_deconfig_cache(obj: T) -> T:
         getter_function = FieldUtil.get_original_function(getter_function)
         if FieldUtil.has_cached_response(getter_function):
             FieldUtil.delete_cached_response(getter_function)
-    return obj
 
 
 def field(name: str) -> Callable[..., T]:
@@ -179,9 +178,6 @@ def config(adapters: Optional[List[AdapterBase]] = None):
             # Decorate with yield, that will handle all logic
             setattr(class_, name, _decorated_config_decorator(getter_function))
 
-        # Add method to reset cache for all fields
-        if not hasattr(class_, "reset_deconfig_cache"):
-            setattr(class_, "reset_deconfig_cache", _reset_deconfig_cache)
         return class_
 
     return wrapper
@@ -192,6 +188,7 @@ __all__ = [
     "optional",
     "add_adapter",
     "set_default_adapters",
+    "reset_cache",
     "config",
     # Adapters
     "EnvAdapter",
