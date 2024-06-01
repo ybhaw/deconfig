@@ -205,7 +205,7 @@ class TestAddAdapter:
 
         stub_config = StubConfig()
         assert stub_config.stub_field() == "stub_adapter_response_2"
-        stub_config.reset_deconfig_cache()
+        deconfig.reset_cache(stub_config)
         assert stub_config.stub_field() == "stub_adapter_response_1"
         with pytest.raises(AdapterError):
             stub_adapter_2.get_field("test", stub_config.stub_field)
@@ -452,18 +452,6 @@ class TestConfig:
         stub_config = StubConfig()
         assert FieldUtil.has_original_function(stub_config.field_stub)
 
-    def test_Should_add_reset_deconfig_cache_method_When_class_is_decorated_with_config(
-        self,
-    ):
-        @config()
-        class StubConfig:
-            @field(name="test")
-            def field_stub(self):
-                """Stub Field"""
-
-        stub_config = StubConfig()
-        assert hasattr(stub_config, "reset_deconfig_cache")
-
     def test_Should_not_create_reset_deconfig_cache_When_class_already_has_reset_deconfig_cache_method(
         self,
     ):
@@ -546,7 +534,7 @@ class TestDecoratedConfigDecorator:
         assert response() == 1
         assert adapter.get_field.call_count == 1
 
-    def test_Should_rebuild_value_When_cache_reset_using_reset_deconfig_cache(self):
+    def test_Should_rebuild_value_When_cache_reset_using_reset_cache(self):
         adapter = MagicMock(AdapterBase)
         adapter.get_field.side_effect = [AdapterError, 1, 2]
 
@@ -561,11 +549,11 @@ class TestDecoratedConfigDecorator:
         assert stub_config.stub_field() == 0
         assert stub_config.stub_field() == 0
         assert adapter.get_field.call_count == 1
-        stub_config.reset_deconfig_cache()
+        deconfig.reset_cache(stub_config)
         assert stub_config.stub_field() == 1
         assert stub_config.stub_field() == 1
         assert adapter.get_field.call_count == 2
-        stub_config.reset_deconfig_cache()
+        deconfig.reset_cache(stub_config)
         assert stub_config.stub_field() == 2
         assert stub_config.stub_field() == 2
         assert adapter.get_field.call_count == 3
@@ -585,3 +573,56 @@ class TestDecoratedConfigDecorator:
         assert adapter_1.get_field.call_count == 1
         assert adapter_2.get_field.call_count == 1
         assert adapter_3.get_field.call_count == 0
+
+
+class TestResetCache:
+    def test_Should_reset_cache_When_reset_cache_is_invoked(self):
+        class AdapterStub(AdapterBase):
+            """Stub Adapter"""
+
+            is_first_invoke = True
+
+            def get_field(self, field_name, method, *_, **__):
+                if self.is_first_invoke:
+                    self.is_first_invoke = False
+                    return 1
+                return 2
+
+        @config([AdapterStub()])
+        class StubConfig:
+            """Stub Config"""
+
+            @field(name="test")
+            def stub_field(self):
+                """
+                Stub field
+                """
+
+        stub_config = StubConfig()
+        assert stub_config.stub_field() == 1
+        assert stub_config.stub_field() == 1
+        deconfig.reset_cache(stub_config)
+        assert stub_config.stub_field() == 2
+
+    def test_Should_do_nothing_When_reset_cache_is_invoked_on_non_set_cache(self):
+        class AdapterStub(AdapterBase):
+            """Stub adapter"""
+
+            is_first_invoke = True
+
+            def get_field(self, field_name, method, *_, **__):
+                return 1
+
+        @config([AdapterStub()])
+        class StubConfig:
+            """Stub Config"""
+
+            @field(name="test")
+            def stub_field(self):
+                """
+                Stub field
+                """
+
+        stub_config = StubConfig()
+        deconfig.reset_cache(stub_config)
+        assert stub_config.stub_field() == 1
