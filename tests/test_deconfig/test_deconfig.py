@@ -578,6 +578,7 @@ class TestDecoratedConfigDecorator:
 class TestResetCache:
     def test_Should_reset_cache_When_reset_cache_is_invoked(self):
         class AdapterStub(AdapterBase):
+            """Stub Adapter"""
             is_first_invoke = True
 
             def get_field(self, field_name, method, *_, **__):
@@ -588,6 +589,7 @@ class TestResetCache:
 
         @config([AdapterStub()])
         class StubConfig:
+            """Stub Config"""
             @field(name="test")
             def stub_field(self):
                 """
@@ -602,6 +604,7 @@ class TestResetCache:
 
     def test_Should_do_nothing_When_reset_cache_is_invoked_on_non_set_cache(self):
         class AdapterStub(AdapterBase):
+            """ Stub adapter """
             is_first_invoke = True
 
             def get_field(self, field_name, method, *_, **__):
@@ -609,6 +612,7 @@ class TestResetCache:
 
         @config([AdapterStub()])
         class StubConfig:
+            """ Stub Config """
             @field(name="test")
             def stub_field(self):
                 """
